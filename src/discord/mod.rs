@@ -7,8 +7,10 @@ use twilight_model::{
 use self::embed::EmbedBuilder;
 
 pub mod command;
+pub mod component;
 pub mod embed;
 pub mod extensions;
+pub mod option_handler;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Response {
@@ -48,6 +50,13 @@ impl Response {
         Response {
             embeds: Some(embeds),
             ..Default::default()
+        }
+    }
+
+    pub fn remove_all_components(self) -> Response {
+        Response {
+            components: Some(vec![]),
+            ..self
         }
     }
 

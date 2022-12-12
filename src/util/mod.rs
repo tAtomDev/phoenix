@@ -28,6 +28,12 @@ impl Color {
     pub const DARK_RED: Color = Color::Rgb(148, 27, 38);
     pub const VERY_DARK_RED: Color = Color::Rgb(69, 5, 11);
 
+    pub const VERY_LIGHT_GREEN: Color = Color::Rgb(177, 240, 192);
+    pub const LIGHT_GREEN: Color = Color::Rgb(126, 242, 154);
+    pub const GREEN: Color = Color::Rgb(56, 242, 102);
+    pub const DARK_GREEN: Color = Color::Rgb(24, 161, 58);
+    pub const VERY_DARK_GREEN: Color = Color::Rgb(6, 74, 23);
+
     pub const VERY_LIGHT_YELLOW: Color = Color::Rgb(242, 209, 116);
     pub const LIGHT_YELLOW: Color = Color::Rgb(240, 209, 84);
     pub const YELLOW: Color = Color::Rgb(245, 207, 37);

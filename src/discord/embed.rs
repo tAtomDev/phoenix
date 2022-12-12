@@ -175,4 +175,9 @@ impl EmbedBuilder {
         self.embed.fields.push(field);
         self.to_owned()
     }
+
+    pub fn add_fields(&mut self, fields: &mut Vec<EmbedField>) -> Self {
+        self.embed.fields.append(fields);
+        self.to_owned()
+    }
 }

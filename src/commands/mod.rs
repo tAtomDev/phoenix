@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use lazy_static::lazy_static;
 use prelude::*;
 
+mod battle;
 mod ping;
 mod profile;
 mod start;
@@ -14,6 +15,7 @@ lazy_static! {
         map.insert("ping", Box::new(ping::PingCommand));
         map.insert("perfil", Box::new(profile::ProfileCommand));
         map.insert("iniciar", Box::new(start::StartCommand));
+        map.insert("batalhar", Box::new(battle::BattleCommand));
 
         map
     };

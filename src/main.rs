@@ -1,3 +1,4 @@
+mod battle;
 mod command_handler;
 mod commands;
 mod config;

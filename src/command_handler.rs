@@ -95,8 +95,9 @@ impl CommandHandler {
                 .iter_mut()
                 .map(|c| {
                     if let Some(guild_id) = guild_id {
-                        c.set_guild_id(guild_id);
+                        *c = c.clone().set_guild_id(guild_id);
                     }
+
                     let build = c.build();
                     tracing::info!(
                         "Registering command {}{}",

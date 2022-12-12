@@ -1,10 +1,14 @@
+use std::time::Duration;
+
 use twilight_model::{
-    application::interaction::{Interaction, InteractionData},
+    application::interaction::InteractionData,
     channel::message::{
         component::{ActionRow, SelectMenu, SelectMenuOption},
         Component, ReactionType,
     },
 };
+
+use crate::discord::extensions::StandbyExtension;
 
 use super::prelude::*;
 pub struct StartCommand;
@@ -66,14 +70,14 @@ impl Command for StartCommand {
         let message = ctx.fetch_reply().await?;
 
         let standby = ctx.standby.clone();
-        let component = standby
-            .wait_for_component(message.id, move |event: &Interaction| {
-                event.author_id().unwrap() == author.id
-            })
-            .await?;
+        let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(30), move |event| {
+            event.author_id() == Some(author.id)
+        }).await else {
+            return Ok(());
+        };
 
         let interaction = Box::new(component);
-        let ctx = CommandContext::from_with_interaction(ctx, interaction.clone());
+        let ctx = CommandContext::from_with_interaction(&ctx, interaction.clone());
 
         let Some(InteractionData::MessageComponent(data)) = interaction.data else { return Ok(()); };
 
