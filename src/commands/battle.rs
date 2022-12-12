@@ -36,6 +36,10 @@ impl Command for BattleCommand {
             .await?
             .ok_or("User expected")?;
 
+        if user.id == author.id {
+            return Ok(ctx.reply(Response::new_user_reply(author, "você nâo pode batalhar com você mesmo!").error_response()).await?);
+        }
+
         let confirmation = ctx
             .create_confirmation(
                 user.clone(),
