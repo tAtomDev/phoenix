@@ -60,7 +60,7 @@ async fn main() -> Result<(), DynamicError> {
     let database = Arc::new(
         Database::new(
             std::env::var("MONGODB_URI").unwrap(),
-            config::CANARY.then(|| "testData").unwrap_or("data"),
+            if config::CANARY { "testData" } else { "data" },
         )
         .await,
     );

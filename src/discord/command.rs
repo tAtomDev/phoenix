@@ -54,13 +54,13 @@ impl CommandContext {
             database: ctx.database.clone(),
             http: ctx.http.clone(),
             interaction,
-            standby: ctx.standby.clone(),
+            standby: ctx.standby,
         }
     }
 
     pub fn client(&self) -> InteractionClient<'_> {
         self.http
-            .interaction(self.interaction.application_id.clone())
+            .interaction(self.interaction.application_id)
     }
 
     pub fn author_id(&self) -> Result<Id<UserMarker>, &str> {
@@ -127,7 +127,7 @@ impl CommandContext {
     pub async fn fetch_reply(&self) -> Result<Message, DynamicError> {
         let response = self
             .client()
-            .response(&self.interaction.token.to_string().as_str())
+            .response(self.interaction.token.to_string().as_str())
             .await?;
 
         Ok(response.model().await?)

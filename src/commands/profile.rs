@@ -49,7 +49,12 @@ impl Command for ProfileCommand {
             })
             .add_field(EmbedField {
                 name: "🔹 Experiência".into(),
-                value: f!("XP: **{}**/{}\nNível: **{}**", user_data.xp, user_data.xp_required_for_level_up(), user_data.level),
+                value: f!(
+                    "XP: **{}**/{}\nNível: **{}**",
+                    user_data.xp,
+                    user_data.xp_required_for_level_up(),
+                    user_data.level
+                ),
                 inline: true,
             })
             .add_field(EmbedField {

@@ -67,7 +67,7 @@ impl Command for StartCommand {
 
         let standby = ctx.standby.clone();
         let component = standby
-            .wait_for_component(message.id.clone(), move |event: &Interaction| {
+            .wait_for_component(message.id, move |event: &Interaction| {
                 event.author_id().unwrap() == author.id
             })
             .await?;

@@ -12,8 +12,8 @@ impl UserExtension for User {
 
         format!(
             "https://cdn.discordapp.com/avatars/{}/{}.png",
-            self.id.to_string(),
-            avatar.to_string()
+            self.id,
+            avatar
         )
     }
 }
