@@ -25,7 +25,7 @@ lazy_static! {
 pub trait Command {
     fn command_config(&self) -> CommandConfig;
     fn build_command(&self, application_id: Id<ApplicationMarker>) -> CommandBuilder;
-    async fn run(&self, ctx: CommandContext) -> CommandResult;
+    async fn run(&self, mut ctx: CommandContext) -> CommandResult;
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

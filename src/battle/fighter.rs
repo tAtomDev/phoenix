@@ -1,4 +1,4 @@
-use database::{common::Stat, user_model::User};
+use database::{common::Stat, user_model::UserData};
 use rand::Rng;
 use twilight_model::user::User as DiscordUser;
 
@@ -6,7 +6,7 @@ use crate::commands::prelude::DynamicError;
 
 #[derive(Debug, Clone)]
 pub struct Fighter {
-    pub name: &'static str,
+    pub name: String,
     pub user: Option<DiscordUser>,
     pub health: Stat,
     pub mana: Stat,
@@ -15,12 +15,11 @@ pub struct Fighter {
 
 impl Fighter {
     pub fn create_from_user_data(
-        username: &'static str,
-        user: User,
         discord_user: DiscordUser,
+        user: UserData,
     ) -> Result<Self, DynamicError> {
         Ok(Self {
-            name: username,
+            name: discord_user.name.clone(),
             user: Some(discord_user),
             health: user.health,
             mana: user.mana,

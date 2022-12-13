@@ -4,7 +4,7 @@ pub mod user_model;
 use common::Stat;
 use data::classes::CharacterClass;
 use mongodb::{bson::doc, Database as MongoDatabase, Client, Collection, error::Error};
-use user_model::User;
+use user_model::UserData;
 
 #[derive(Debug, Clone)]
 pub struct Database {
@@ -26,14 +26,14 @@ impl Database {
         self.client.database(&self.database_name)
     }
 
-    pub fn user_collection(&self) -> Collection<User> {
-        self.db().collection_with_type::<User>("user")
+    pub fn user_collection(&self) -> Collection<UserData> {
+        self.db().collection_with_type::<UserData>("user")
     }
 
     pub async fn register_user_data(&self, user_id: String, class: CharacterClass) -> Result<(), mongodb::error::Error>  {
         let user_collection = self.user_collection();
 
-        let mut user = User::new(user_id.into(), class.class_type);
+        let mut user = UserData::new(user_id.into(), class.class_type);
         user.health = Stat::new(class.health);
         user.mana = Stat::new(class.mana);
         user.strength = class.strength;
@@ -42,7 +42,7 @@ impl Database {
         Ok(())
     }
 
-    async fn get_raw_user_data(&self, user_id: String) -> Result<Option<User>, Error> {
+    async fn get_raw_user_data(&self, user_id: String) -> Result<Option<UserData>, Error> {
         let user_collection = self.user_collection();
         
         Ok(
@@ -52,7 +52,7 @@ impl Database {
         )
     }
 
-    pub async fn get_user_data(&self, user_id: String) -> Result<Option<User>, Error> {
+    pub async fn get_user_data(&self, user_id: String) -> Result<Option<UserData>, Error> {
         let data = self.get_raw_user_data(user_id.clone()).await?;
 
         Ok(data)

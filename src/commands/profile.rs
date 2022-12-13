@@ -20,7 +20,7 @@ impl Command for ProfileCommand {
         CommandBuilder::new(application_id, "perfil", "Veja seu perfil de aventureiro")
     }
 
-    async fn run(&self, ctx: CommandContext) -> CommandResult {
+    async fn run(&self, mut ctx: CommandContext) -> CommandResult {
         let author = ctx.author().await?;
         let user_data = ctx
             .db()

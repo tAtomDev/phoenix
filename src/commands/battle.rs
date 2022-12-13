@@ -28,7 +28,7 @@ impl Command for BattleCommand {
         )
     }
 
-    async fn run(&self, ctx: CommandContext) -> CommandResult {
+    async fn run(&self, mut ctx: CommandContext) -> CommandResult {
         let author = ctx.author().await?;
         let user = ctx
             .options()
@@ -37,14 +37,19 @@ impl Command for BattleCommand {
             .ok_or("User expected")?;
 
         if user.id == author.id {
-            return Ok(ctx.reply(Response::new_user_reply(author, "você nâo pode batalhar com você mesmo!").error_response()).await?);
+            return Ok(ctx
+                .reply(
+                    Response::new_user_reply(author, "você nâo pode batalhar com você mesmo!")
+                        .error_response(),
+                )
+                .await?);
         }
 
         let confirmation = ctx
             .create_confirmation(
                 user.clone(),
                 Response::new_user_reply(
-                    user,
+                    user.clone(),
                     f!(
                         "você foi convidado para batalhar com **{}**! Você aceita?",
                         author.name
@@ -58,21 +63,20 @@ impl Command for BattleCommand {
         }
 
         let author = ctx.author().await?;
-        let user_data = ctx
+        let author_data = ctx
             .db()
             .get_user_data(author.id.to_string())
             .await?
             .ok_or("Invalid data")?;
+        let user_data = ctx
+            .db()
+            .get_user_data(user.id.to_string())
+            .await?
+            .ok_or("Invalid data")?;
 
         let fighters = vec![
-            battle::Fighter::create_from_user_data(
-                "teste",
-                user_data.clone(),
-                author.clone(),
-            )?,
-            battle::Fighter::create_from_user_data(
-                "teste2", user_data, author,
-            )?,
+            battle::Fighter::create_from_user_data(author, author_data)?,
+            battle::Fighter::create_from_user_data(user, user_data)?,
         ];
 
         battle::util::handle_battle(&ctx, &mut battle::Battle::new(fighters))

@@ -119,34 +119,22 @@ impl EmbedBuilder {
         self.to_owned()
     }
 
-    pub fn set_title<S>(&mut self, title: S) -> Self
-    where
-        S: ToString,
-    {
+    pub fn set_title<S: ToString>(&mut self, title: S) -> Self {
         self.embed.title = Some(title.to_string());
         self.to_owned()
     }
 
-    pub fn set_image<S>(&mut self, image: S) -> Self
-    where
-        S: ToString,
-    {
+    pub fn set_image<S: ToString>(&mut self, image: S) -> Self {
         self.embed.image = Some(image.to_string());
         self.to_owned()
     }
 
-    pub fn set_thumbnail<S>(&mut self, thumbnail: S) -> Self
-    where
-        S: ToString,
-    {
+    pub fn set_thumbnail<S: ToString>(&mut self, thumbnail: S) -> Self {
         self.embed.thumbnail = Some(thumbnail.to_string());
         self.to_owned()
     }
 
-    pub fn set_description<S>(&mut self, description: S) -> Self
-    where
-        S: ToString,
-    {
+    pub fn set_description<S: ToString>(&mut self, description: S) -> Self {
         self.embed.description = Some(description.to_string());
         self.to_owned()
     }

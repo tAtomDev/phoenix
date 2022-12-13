@@ -15,7 +15,7 @@ impl Command for PingCommand {
         CommandBuilder::new(application_id, "ping", "Verifique se estou funcionando bem")
     }
 
-    async fn run(&self, ctx: CommandContext) -> CommandResult {
+    async fn run(&self, mut ctx: CommandContext) -> CommandResult {
         let start = Utc::now().timestamp_millis();
 
         ctx.reply(Response::from_string("Pong!")).await?;

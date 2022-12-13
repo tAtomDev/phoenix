@@ -12,6 +12,7 @@ use twilight_model::{
 use crate::{
     commands::prelude::{CommandContext, DynamicError, Response},
     discord::{
+        component::{ActionRowBuilder, ButtonBuilder},
         embed::{EmbedAuthor, EmbedBuilder, EmbedField},
         extensions::{StandbyExtension, UserExtension},
     },
@@ -52,24 +53,38 @@ fn get_battle_embed(battle: &Battle) -> EmbedBuilder {
 }
 
 fn get_battle_action_components(_battle: &Battle) -> Component {
-    Component::ActionRow(ActionRow {
-        components: ACTIONS
-            .iter()
-            .copied()
+    ActionRowBuilder::new()
+        .add_buttons(ACTIONS.iter().copied()
             .map(|a| {
-                Component::Button(Button {
-                    style: ButtonStyle::Secondary,
-                    custom_id: Some(a.name().into()),
-                    disabled: false,
-                    emoji: Some(ReactionType::Unicode {
+                ButtonBuilder::new()
+                    .set_custom_id(a.name())
+                    .set_emoji(ReactionType::Unicode {
                         name: a.emoji().into(),
-                    }),
-                    label: Some(a.name().into()),
-                    url: None,
-                })
+                    })
+                    .set_label(a.name())
             })
             .collect(),
-    })
+        )
+        .build()
+
+    //Component::ActionRow(ActionRow {
+    //    components: ACTIONS
+    //        .iter()
+    //        .copied()
+    //        .map(|a| {
+    //            Component::Button(Button {
+    //                style: ButtonStyle::Secondary,
+    //                custom_id: Some(a.name().into()),
+    //                disabled: false,
+    //                emoji: Some(ReactionType::Unicode {
+    //                    name: a.emoji().into(),
+    //                }),
+    //                label: Some(a.name().into()),
+    //                url: None,
+    //            })
+    //        })
+    //        .collect(),
+    //})
 }
 
 async fn wait_for_battle_action(

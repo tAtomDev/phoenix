@@ -130,7 +130,8 @@ impl Battle {
             }
         };
 
-        let alive_fighters: Vec<Fighter> = self.fighters
+        let alive_fighters: Vec<Fighter> = self
+            .fighters
             .iter()
             .cloned()
             .filter(|f| f.health.value > 0)

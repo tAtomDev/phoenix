@@ -25,7 +25,7 @@ impl Command for StartCommand {
         CommandBuilder::new(application_id, "iniciar", "Inicie sua jornada em Phoenix!")
     }
 
-    async fn run(&self, ctx: CommandContext) -> CommandResult {
+    async fn run(&self, mut ctx: CommandContext) -> CommandResult {
         let author = ctx.author().await?;
         let user_data = ctx.db().get_user_data(author.id.to_string()).await?;
         if user_data.is_some() {
@@ -77,7 +77,7 @@ impl Command for StartCommand {
         };
 
         let interaction = Box::new(component);
-        let ctx = CommandContext::from_with_interaction(&ctx, interaction.clone());
+        let mut ctx = CommandContext::from_with_interaction(&ctx, interaction.clone());
 
         let Some(InteractionData::MessageComponent(data)) = interaction.data else { return Ok(()); };
 

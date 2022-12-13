@@ -102,23 +102,22 @@ impl CommandContext {
         OptionHandler { ctx: self }
     }
 
-    pub async fn create_confirmation(&self, user: User, response: Response) -> bool {
+    pub async fn create_confirmation(&mut self, user: User, response: Response) -> bool {
         let response = Response {
             components: Some(vec![ActionRowBuilder::new()
                 .add_button(
                     ButtonBuilder::new()
                         .set_label("Sim")
                         .set_custom_id("yes")
-                        .set_emoji(ReactionType::Unicode { name: '✅'.into() })
+                        .set_emoji(ReactionType::Unicode { name: '✅'.into() }),
                 )
                 .add_button(
                     ButtonBuilder::new()
                         .set_label("Não")
                         .set_custom_id("no")
-                        .set_emoji(ReactionType::Unicode { name: '❌'.into() })
+                        .set_emoji(ReactionType::Unicode { name: '❌'.into() }),
                 )
-                .build()
-            ]),
+                .build()]),
             ..response
         };
 
@@ -139,12 +138,14 @@ impl CommandContext {
 
         let ctx = CommandContext::from_with_interaction(self, Box::new(component.clone()));
 
-        ctx.update_interaction(response.remove_all_components()).await.ok();
+        ctx.update_interaction(response.remove_all_components())
+            .await
+            .ok();
 
         matches!(data.custom_id.as_str(), "yes")
     }
 
-    pub async fn send(&self, response: Response) -> Result<Message, DynamicError> {
+    pub async fn send(&mut self, response: Response) -> Result<Message, DynamicError> {
         if self.already_replied {
             Ok(self.send_in_channel(response).await?)
         } else {
@@ -169,7 +170,7 @@ impl CommandContext {
         Ok(())
     }
 
-    pub async fn reply(&self, response: Response) -> Result<(), DynamicError> {
+    pub async fn reply(&mut self, response: Response) -> Result<(), DynamicError> {
         self.client()
             .create_response(
                 self.interaction.id,
@@ -180,6 +181,8 @@ impl CommandContext {
                 },
             )
             .await?;
+
+        self.already_replied = true;
 
         Ok(())
     }

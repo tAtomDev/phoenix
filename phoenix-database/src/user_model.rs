@@ -6,7 +6,7 @@ use crate::common::Stat;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct User {
+pub struct UserData {
     #[serde(rename = "_id")]
     pub id: ObjectId,
     pub user_id: String,
@@ -22,7 +22,7 @@ pub struct User {
     pub level: i32
 }
 
-impl User {
+impl UserData {
     pub fn new(user_id: String, class: ClassType) -> Self {
         Self {
             id: ObjectId::new(),

@@ -6,7 +6,12 @@ use crate::{
         COMMANDS,
     },
     config,
+    discord::{
+        embed::{EmbedAuthor, EmbedBuilder},
+        extensions::UserExtension,
+    },
     prelude::DynamicError,
+    util::Color,
 };
 use database::Database;
 use twilight_http::{client::InteractionClient, Client as HttpClient};
@@ -40,12 +45,14 @@ impl CommandHandler {
             })
             .ok_or("Data not found")?;
 
-        let ctx = CommandContext::new(
+        let mut ctx = CommandContext::new(
             http.clone(),
             Box::new(interaction.0),
             self.database.clone(),
             self.standby.clone(),
         );
+
+        let author = ctx.author().await?;
 
         let command = COMMANDS
             .get(data.name.as_str())
@@ -56,7 +63,7 @@ impl CommandHandler {
         if config.character_required
             && ctx
                 .db()
-                .get_user_data(ctx.author_id()?.to_string())
+                .get_user_data(author.id.to_string())
                 .await?
                 .is_none()
         {
@@ -66,7 +73,19 @@ impl CommandHandler {
             ).await;
         }
 
-        command.run(ctx).await?;
+        // Error handling & run command
+        if let Err(err) = command.run(ctx.clone()).await {
+            let embed = EmbedBuilder::new()
+                .set_author(EmbedAuthor {
+                    name: "Algo deu errado!".into(),
+                    icon_url: Some(author.avatar_url()),
+                })
+                .set_color(Color::RED)
+                .set_description(format!("```rs\n{:#?}\n```", err))
+                .set_current_timestamp();
+
+            ctx.send_in_channel(Response::from_embeds(vec![embed])).await?;
+        };
 
         Ok(())
     }
@@ -104,6 +123,7 @@ impl CommandHandler {
                         build.name,
                         if config::CANARY { " (CANARY)" } else { "" }
                     );
+
                     build
                 })
                 .collect::<Vec<APICommand>>()
