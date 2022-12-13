@@ -16,6 +16,8 @@ pub struct UserData {
     pub health: Stat,
     pub mana: Stat,
     pub strength: i32,
+    pub agility: i32,
+    pub intelligence: i32,
     #[serde(default = "default_xp")]
     pub xp: i32,
     #[serde(default = "default_level")]
@@ -31,14 +33,12 @@ impl UserData {
             gold: default_gold(),
             health: Stat::new(100),
             mana: Stat::new(20),
-            strength: 10,
+            strength: 20,
+            agility: 5,
+            intelligence: 5,
             xp: 0,
             level: 1
         }
-    }
-
-    pub fn xp_required_for_level_up(&self) -> i32 {
-        (100f32 * (self.level as f32 * 1.5)) as i32
     }
 }
 

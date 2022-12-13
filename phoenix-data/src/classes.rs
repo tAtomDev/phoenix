@@ -17,6 +17,8 @@ pub struct CharacterClass {
     pub health: i32,
     pub strength: i32,
     pub mana: i32,
+    pub agility: i32,
+    pub intelligence: i32,
 }
 
 pub const KNIGHT: CharacterClass = CharacterClass {
@@ -26,7 +28,9 @@ pub const KNIGHT: CharacterClass = CharacterClass {
     class_type: ClassType::Knight,
     health: 100,
     strength: 20,
-    mana: 10
+    mana: 10,
+    agility: 5,
+    intelligence: 5,
 };
 
 pub const MAGE: CharacterClass = CharacterClass {
@@ -36,7 +40,9 @@ pub const MAGE: CharacterClass = CharacterClass {
     class_type: ClassType::Mage,
     health: 80,
     strength: 5,
-    mana: 50
+    mana: 50,
+    agility: 8,
+    intelligence: 15,
 };
 
 pub const ASSASSIN: CharacterClass = CharacterClass {
@@ -45,8 +51,10 @@ pub const ASSASSIN: CharacterClass = CharacterClass {
     description: "O assassino é um guerreiro sombrio e letal",
     class_type: ClassType::Assassin,
     health: 60,
-    strength: 20,
-    mana: 25
+    strength: 15,
+    mana: 15,
+    agility: 15,
+    intelligence: 10,
 };
 
 pub const ALL_CLASSES: [CharacterClass; 3] = [KNIGHT, MAGE, ASSASSIN];

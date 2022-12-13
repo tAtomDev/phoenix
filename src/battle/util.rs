@@ -22,7 +22,7 @@ use crate::{
 use super::{Action, Battle, BattleResult, ACTIONS};
 
 fn get_battle_embed(battle: &Battle) -> EmbedBuilder {
-    let current_fighter = battle.current_fighter().unwrap();
+    let current_fighter = battle.current_fighter();
 
     EmbedBuilder::new()
         .set_color(Color::BLURPLE)
@@ -35,17 +35,23 @@ fn get_battle_embed(battle: &Battle) -> EmbedBuilder {
                 .fighters
                 .iter()
                 .cloned()
-                .map(|f| EmbedField {
-                    name: f.name.to_string(),
-                    value: format!(
-                        "❤️ Vida: {} (`{}%`)\n🌀 Mana: {} (`{}%`)\n💪 Força: {}",
-                        f.health,
-                        f.health.percentage(),
-                        f.mana,
-                        f.mana.percentage(),
-                        f.strength
-                    ),
-                    inline: true,
+                .map(|f| {
+                    let target = battle.fighters.get(f.target_index.unwrap()).unwrap();
+
+                    EmbedField {
+                        name: f.name.to_string(),
+                        value: format!(
+                            "❤️ Vida: {} (`{}%`)\n🌀 Mana: {} (`{}%`)\n💪 Força: {}\nChance de crítico: `{}%`\nChance de esquiva: `{}%`",
+                            f.health,
+                            f.health.percentage(),
+                            f.mana,
+                            f.mana.percentage(),
+                            f.strength,
+                            f.calculate_critical_chance(target),
+                            f.calculate_dodge_chance(target)
+                        ),
+                        inline: true,
+                    }
                 })
                 .collect(),
         )
@@ -69,25 +75,6 @@ fn get_battle_action_components(_battle: &Battle) -> Component {
                 .collect(),
         )
         .build()
-
-    //Component::ActionRow(ActionRow {
-    //    components: ACTIONS
-    //        .iter()
-    //        .copied()
-    //        .map(|a| {
-    //            Component::Button(Button {
-    //                style: ButtonStyle::Secondary,
-    //                custom_id: Some(a.name().into()),
-    //                disabled: false,
-    //                emoji: Some(ReactionType::Unicode {
-    //                    name: a.emoji().into(),
-    //                }),
-    //                label: Some(a.name().into()),
-    //                url: None,
-    //            })
-    //        })
-    //        .collect(),
-    //})
 }
 
 async fn wait_for_battle_action(
@@ -103,7 +90,7 @@ async fn wait_for_battle_action(
         })
         .await?;
 
-    let user = battle.current_fighter().unwrap().user.clone().unwrap();
+    let user = battle.current_fighter().user.clone().unwrap();
 
     let standby = ctx.standby.clone();
     let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(500), move |event| {

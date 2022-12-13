@@ -3,7 +3,7 @@ use crate::{
         embed::{EmbedAuthor, EmbedBuilder, EmbedField},
         extensions::UserExtension,
     },
-    util::Color,
+    util::{math, Color},
 };
 
 use super::prelude::*;
@@ -52,7 +52,7 @@ impl Command for ProfileCommand {
                 value: f!(
                     "XP: **{}**/{}\nNível: **{}**",
                     user_data.xp,
-                    user_data.xp_required_for_level_up(),
+                    math::calculate_xp_required_for_level_up(user_data.level),
                     user_data.level
                 ),
                 inline: true,
@@ -70,6 +70,16 @@ impl Command for ProfileCommand {
             .add_field(EmbedField {
                 name: "💪 Força".into(),
                 value: f!("{}", user_data.strength),
+                inline: true,
+            })
+            .add_field(EmbedField {
+                name: "🧠 Inteligência".into(),
+                value: f!("{}", user_data.intelligence),
+                inline: true,
+            })
+            .add_field(EmbedField {
+                name: "⚡ Agilidade".into(),
+                value: f!("{}", user_data.agility),
                 inline: true,
             })
             .set_current_timestamp();

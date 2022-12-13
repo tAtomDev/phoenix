@@ -36,6 +36,8 @@ impl Database {
         user.health = Stat::new(class.health);
         user.mana = Stat::new(class.mana);
         user.strength = class.strength;
+        user.agility = class.agility;
+        user.intelligence = class.intelligence;
 
         user_collection.insert_one(user, None).await?;
         Ok(())

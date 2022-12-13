@@ -1,4 +1,7 @@
 #![allow(unused)]
+
+pub mod math;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Color {
     Hex(String),
