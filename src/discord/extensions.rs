@@ -13,6 +13,7 @@ use crate::commands::prelude::DynamicError;
 
 pub trait UserExtension {
     fn avatar_url(&self) -> String;
+    fn mention(&self) -> String;
 }
 
 impl UserExtension for User {
@@ -25,6 +26,10 @@ impl UserExtension for User {
             "https://cdn.discordapp.com/avatars/{}/{}.png",
             self.id, avatar
         )
+    }
+
+    fn mention(&self) -> String {
+        format!("<@{}>", self.id)
     }
 }
 

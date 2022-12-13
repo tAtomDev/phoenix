@@ -4,12 +4,12 @@ use twilight_model::channel::message::{
     Component, ReactionType,
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ActionRowBuilder {
     data: ActionRow,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ButtonBuilder {
     data: Button,
 }
@@ -81,11 +81,7 @@ impl ActionRowBuilder {
     }
 
     pub fn add_buttons(mut self, buttons: Vec<ButtonBuilder>) -> Self {
-        let mut buttons: Vec<Component> = buttons
-            .iter()
-            .cloned()
-            .map(|b| b.to_owned().build())
-            .collect();
+        let mut buttons: Vec<Component> = buttons.iter().cloned().map(|b| b.build()).collect();
         self.data.components.append(&mut buttons);
         self
     }

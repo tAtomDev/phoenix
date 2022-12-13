@@ -1,7 +1,6 @@
-pub mod common;
 pub mod user_model;
 
-use common::Stat;
+use data::Stat;
 use data::classes::CharacterClass;
 use mongodb::{bson::doc, Database as MongoDatabase, Client, Collection, error::Error};
 use user_model::UserData;
@@ -50,6 +49,14 @@ impl Database {
                 "userId": user_id
             }, None).await?
         )
+    }
+
+    pub async fn is_user_registered(&self, user_id: String) -> bool {
+        let Ok(data) = self.get_raw_user_data(user_id.clone()).await else {
+            return false;
+        };
+
+        data.is_some()
     }
 
     pub async fn get_user_data(&self, user_id: String) -> Result<Option<UserData>, Error> {

@@ -84,7 +84,8 @@ impl CommandHandler {
                 .set_description(format!("```rs\n{:#?}\n```", err))
                 .set_current_timestamp();
 
-            ctx.send_in_channel(Response::from_embeds(vec![embed])).await?;
+            ctx.send_in_channel(Response::from_embeds(vec![embed]))
+                .await?;
         };
 
         Ok(())

@@ -1,4 +1,5 @@
-use database::{common::Stat, user_model::UserData};
+use data::Stat;
+use database::user_model::UserData;
 use rand::Rng;
 use twilight_model::user::User as DiscordUser;
 

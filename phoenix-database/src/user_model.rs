@@ -2,7 +2,7 @@ use data::classes::ClassType;
 use mongodb::bson::{oid::ObjectId};
 use serde::{Serialize, Deserialize};
 
-use crate::common::Stat;
+use data::Stat;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

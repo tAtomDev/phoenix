@@ -4,7 +4,7 @@ use twilight_model::{
     user::User,
 };
 
-use self::embed::EmbedBuilder;
+use self::{embed::EmbedBuilder, extensions::UserExtension};
 
 pub mod command;
 pub mod component;
@@ -36,7 +36,7 @@ impl From<Response> for InteractionResponseData {
 
 impl Response {
     pub fn new_user_reply(user: User, string: impl Into<String>) -> Response {
-        Response::from_string(format!("**{}**, {}", user.name, string.into()))
+        Response::from_string(format!("**{}**, {}", user.mention(), string.into()))
     }
 
     pub fn from_string(string: impl Into<String>) -> Response {

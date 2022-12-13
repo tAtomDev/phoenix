@@ -54,16 +54,19 @@ fn get_battle_embed(battle: &Battle) -> EmbedBuilder {
 
 fn get_battle_action_components(_battle: &Battle) -> Component {
     ActionRowBuilder::new()
-        .add_buttons(ACTIONS.iter().copied()
-            .map(|a| {
-                ButtonBuilder::new()
-                    .set_custom_id(a.name())
-                    .set_emoji(ReactionType::Unicode {
-                        name: a.emoji().into(),
-                    })
-                    .set_label(a.name())
-            })
-            .collect(),
+        .add_buttons(
+            ACTIONS
+                .iter()
+                .copied()
+                .map(|a| {
+                    ButtonBuilder::new()
+                        .set_custom_id(a.name())
+                        .set_emoji(ReactionType::Unicode {
+                            name: a.emoji().into(),
+                        })
+                        .set_label(a.name())
+                })
+                .collect(),
         )
         .build()
 
@@ -100,9 +103,11 @@ async fn wait_for_battle_action(
         })
         .await?;
 
+    let user = battle.current_fighter().unwrap().user.clone().unwrap();
+
     let standby = ctx.standby.clone();
     let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(500), move |event| {
-        event.author_id() == Some(author_id)
+        event.author_id() == Some(user.id)
     }).await else {
         return Ok(None);
     };
