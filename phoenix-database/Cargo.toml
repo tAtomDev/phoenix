@@ -7,7 +7,9 @@ edition = "2021"
 [dependencies]
 tracing = "0.1.37"
 serde = "1.0.149"
+rand = "0.8.5"
 data = { path = "../phoenix-data" }
+util = { path = "../phoenix-util" }
 
 [dependencies.mongodb]
 mongodb = "2.3.1"

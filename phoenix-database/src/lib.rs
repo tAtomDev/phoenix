@@ -2,7 +2,7 @@ pub mod user_model;
 
 use data::Stat;
 use data::classes::CharacterClass;
-use mongodb::{bson::doc, Database as MongoDatabase, Client, Collection, error::Error};
+use mongodb::{bson::doc, Database as MongoDatabase, Client, Collection, error::Error, results::UpdateResult};
 use user_model::UserData;
 
 #[derive(Debug, Clone)]
@@ -65,5 +65,17 @@ impl Database {
         let data = self.get_raw_user_data(user_id.clone()).await?;
 
         Ok(data)
+    }
+
+    pub async fn save_user_data(&self, data: UserData) -> Result<UpdateResult, Error> {
+        let user_collection = self.user_collection();
+
+        Ok(
+            user_collection.replace_one(
+                doc! { "userId": data.user_id.clone() }, 
+                data, 
+                None
+            ).await?
+        )
     }
 }

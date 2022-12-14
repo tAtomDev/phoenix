@@ -1,6 +1,4 @@
-use twilight_model::application::command::CommandOptionType;
-
-use crate::{battle, discord::command::CommandOptionBuilder};
+use crate::battle;
 
 use super::prelude::*;
 

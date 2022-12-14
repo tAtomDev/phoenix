@@ -2,10 +2,7 @@ use std::time::Duration;
 
 use twilight_model::{
     application::interaction::InteractionData,
-    channel::message::{
-        component::{ActionRow, SelectMenu, SelectMenuOption},
-        Component, ReactionType,
-    },
+    channel::message::ReactionType
 };
 
 use crate::discord::extensions::StandbyExtension;
@@ -37,32 +34,37 @@ impl Command for StartCommand {
                 .await;
         }
 
-        let menu = Component::SelectMenu(SelectMenu {
-            custom_id: "menu".into(),
-            disabled: false,
-            max_values: None,
-            min_values: None,
-            placeholder: None,
-            options: data::classes::ALL_CLASSES
-                .iter()
-                .map(|c| SelectMenuOption {
-                    default: false,
-                    description: Some(c.description.into()),
-                    emoji: Some(ReactionType::Unicode {
-                        name: c.emoji.into(),
-                    }),
-                    label: c.name.into(),
-                    value: c.name.into(),
-                })
-                .collect(),
-        });
+        let embed = EmbedBuilder::new()
+            .set_color(Color::DARK_ORANGE)
+            .set_author(EmbedAuthor { name: f!("{}, escolha sua classe!", author.name), icon_url: Some(author.avatar_url()) })
+            .add_fields(
+                &mut data::classes::ALL_CLASSES
+                    .iter()
+                    .map(|c| EmbedField {
+                        name: f!("{}, {}", c.emoji, c.name),
+                        value: c.description.into(),
+                        inline: false
+                    })
+                    .collect()
+            )
+            .set_current_timestamp();
 
-        let action_row = Component::ActionRow(ActionRow {
-            components: vec![menu],
-        });
+        let action_row = ActionRowBuilder::new()
+            .add_buttons(
+                data::classes::ALL_CLASSES
+                    .iter()
+                    .map(|c| 
+                        ButtonBuilder::new()
+                        .set_custom_id(c.name).set_label(c.name)
+                        .set_emoji(ReactionType::Unicode { name: c.emoji.into() })
+                    )
+                    .collect()
+            )
+            .build();
 
         ctx.reply(Response {
             components: Some(vec![action_row]),
+            embeds: Some(vec![embed]),
             ..Response::new_user_reply(author.clone(), "escolha sua classe:")
         })
         .await?;
@@ -70,7 +72,7 @@ impl Command for StartCommand {
         let message = ctx.fetch_reply().await?;
 
         let standby = ctx.standby.clone();
-        let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(30), move |event| {
+        let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(12 & 0), move |event| {
             event.author_id() == Some(author.id)
         }).await else {
             return Ok(());

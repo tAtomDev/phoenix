@@ -1,5 +1,9 @@
 #![allow(unused)]
 
+use std::{time::Duration, future::Future};
+
+use tokio::task::JoinHandle;
+
 pub mod math;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -58,4 +62,16 @@ impl Color {
             Self::Integer(int) => *int,
         }
     }
+}
+
+pub fn set_tokio_timeout<T>(duration: Duration, future: T) -> JoinHandle<T::Output> 
+where
+    T: Future + Send + 'static,
+    T::Output: Send + 'static,
+{
+    tokio::spawn(async move {
+        tokio::time::sleep(duration).await;
+
+        future.await
+    })
 }

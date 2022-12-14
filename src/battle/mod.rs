@@ -4,6 +4,7 @@ pub mod util;
 
 use std::f32::consts::E;
 
+use ::util::Color;
 pub use fighter::Fighter;
 use format as f;
 use rand::Rng;
@@ -14,7 +15,6 @@ use crate::{
         embed::{EmbedAuthor, EmbedBuilder},
         extensions::UserExtension,
     },
-    util::Color,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,9 +73,10 @@ impl From<Round> for EmbedBuilder {
 }
 
 pub struct BattleResult {
-    winner: Fighter,
-    defeated_fighters: Vec<Fighter>,
-    battle: Battle,
+    pub winner: Fighter,
+    pub defeated_fighters: Vec<Fighter>,
+    pub all_fighters: Vec<Fighter>,
+    pub battle: Battle,
 }
 
 #[derive(Debug, Clone)]
@@ -142,9 +143,12 @@ impl Battle {
         let fighter = self.current_fighter().clone();
         let target = self.target_fighter_mut();
 
-        let rng = &mut rand::thread_rng();
-        let dodged = rng.gen_bool(target.calculate_dodge_chance(&fighter) as f64 / 100f64);
-        let critical = rng.gen_bool(fighter.calculate_critical_chance(target) as f64 / 100f64);
+        let dodged = target
+            .calculate_dodge_chance(&fighter)
+            .generate_random_bool();
+        let critical = fighter
+            .calculate_critical_chance(target)
+            .generate_random_bool();
 
         let round = match action {
             Action::Attack => {
@@ -157,9 +161,7 @@ impl Battle {
                 #[rustfmt::skip]
                 let mut round = Round::new_with_message(fighter.clone(), action, f!(
                     "**{}** atacou **{}** com um golpe simples, que causou **{}** de dano.{}",
-                    fighter.name,
-                    target.name,
-                    damage,
+                    fighter.name, target.name, damage,
                     if critical { "\n(**ACERTO CRÍTICO!** 💥)" } else { "" }
                 ));
 

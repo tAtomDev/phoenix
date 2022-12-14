@@ -4,10 +4,12 @@ use async_trait::async_trait;
 use lazy_static::lazy_static;
 use prelude::*;
 
+mod adventure;
 mod battle;
 mod ping;
 mod profile;
 mod start;
+mod rest;
 
 lazy_static! {
     pub static ref COMMANDS: HashMap<&'static str, Box<dyn Command + Send + Sync>> = {
@@ -16,6 +18,8 @@ lazy_static! {
         map.insert("perfil", Box::new(profile::ProfileCommand));
         map.insert("iniciar", Box::new(start::StartCommand));
         map.insert("batalhar", Box::new(battle::BattleCommand));
+        map.insert("aventura", Box::new(adventure::AdventureCommand));
+        map.insert("descansar", Box::new(rest::RestCommand));
 
         map
     };
@@ -23,7 +27,10 @@ lazy_static! {
 
 #[async_trait]
 pub trait Command {
-    fn command_config(&self) -> CommandConfig;
+    fn command_config(&self) -> CommandConfig {
+        CommandConfig::default()
+    }
+
     fn build_command(&self, application_id: Id<ApplicationMarker>) -> CommandBuilder;
     async fn run(&self, mut ctx: CommandContext) -> CommandResult;
 }
@@ -44,15 +51,21 @@ impl Default for CommandConfig {
 pub mod prelude {
     pub use super::Command;
     pub use super::CommandConfig;
-    pub use crate::discord::command::{CommandBuilder, CommandContext};
+    pub use crate::discord::command::*;
+    pub use crate::discord::component::*;
+    pub use crate::discord::embed::*;
+    pub use crate::discord::extensions::*;
     pub use crate::discord::Response;
     pub use crate::prelude::DynamicError;
     pub use async_trait::async_trait;
+    pub use data::*;
     pub(crate) use format as f;
+    pub use util::*;
 
     pub type CommandResult = Result<(), DynamicError>;
 
     pub use twilight_model::{
+        application::command::CommandOptionType,
         gateway::payload::incoming::InteractionCreate,
         http::interaction::{
             InteractionResponse, InteractionResponseData, InteractionResponseType,

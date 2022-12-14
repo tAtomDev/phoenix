@@ -11,7 +11,6 @@ use crate::{
         extensions::UserExtension,
     },
     prelude::DynamicError,
-    util::Color,
 };
 use database::Database;
 use twilight_http::{client::InteractionClient, Client as HttpClient};
@@ -24,6 +23,7 @@ use twilight_model::{
     },
 };
 use twilight_standby::Standby;
+use util::*;
 
 pub struct CommandHandler {
     pub database: Arc<Database>,

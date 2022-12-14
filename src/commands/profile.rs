@@ -1,10 +1,9 @@
-use crate::{
-    discord::{
-        embed::{EmbedAuthor, EmbedBuilder, EmbedField},
-        extensions::UserExtension,
-    },
-    util::{math, Color},
+use crate::discord::{
+    embed::{EmbedAuthor, EmbedBuilder, EmbedField},
+    extensions::UserExtension,
 };
+
+use util::{math, Color};
 
 use super::prelude::*;
 
@@ -45,6 +44,11 @@ impl Command for ProfileCommand {
             .add_field(EmbedField {
                 name: "🪙 Ouro".into(),
                 value: f!("{}", user_data.gold),
+                inline: true,
+            })
+            .add_field(EmbedField {
+                name: "🗺️ Rumo à Reconstrução".into(),
+                value: f!("`{} km` percorridos", user_data.journey),
                 inline: true,
             })
             .add_field(EmbedField {

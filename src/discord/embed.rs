@@ -12,7 +12,7 @@ use twilight_model::{
     util::Timestamp,
 };
 
-use crate::util::Color;
+use util::Color;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EmbedField {

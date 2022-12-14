@@ -5,7 +5,6 @@ mod config;
 mod discord;
 mod event_handler;
 mod prelude;
-mod util;
 
 use database::Database;
 use event_handler::EventHandler;

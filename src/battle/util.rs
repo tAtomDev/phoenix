@@ -16,8 +16,8 @@ use crate::{
         embed::{EmbedAuthor, EmbedBuilder, EmbedField},
         extensions::{StandbyExtension, UserExtension},
     },
-    util::Color,
 };
+use util::Color;
 
 use super::{Action, Battle, BattleResult, ACTIONS};
 
@@ -40,16 +40,7 @@ fn get_battle_embed(battle: &Battle) -> EmbedBuilder {
 
                     EmbedField {
                         name: f.name.to_string(),
-                        value: format!(
-                            "❤️ Vida: {} (`{}%`)\n🌀 Mana: {} (`{}%`)\n💪 Força: {}\nChance de crítico: `{}%`\nChance de esquiva: `{}%`",
-                            f.health,
-                            f.health.percentage(),
-                            f.mana,
-                            f.mana.percentage(),
-                            f.strength,
-                            f.calculate_critical_chance(target),
-                            f.calculate_dodge_chance(target)
-                        ),
+                        value: f.display_full_stats_with_target(target),
                         inline: true,
                     }
                 })
@@ -82,6 +73,11 @@ async fn wait_for_battle_action(
     battle: Battle,
 ) -> Result<Option<Action>, DynamicError> {
     let author_id = ctx.author_id()?;
+
+    if let Some(anomaly) = battle.current_fighter().anomaly {
+        return Ok(Some(battle.current_fighter().choose_action(&battle)));
+    }
+
     let message = ctx
         .send_in_channel(Response {
             embeds: Some(vec![get_battle_embed(&battle)]),
@@ -131,16 +127,13 @@ pub async fn handle_battle(
         .send_in_channel(Response::from_embeds(vec![round.into()]))
         .await
         .ok();
-    let ctx_clone = ctx.clone();
-    tokio::spawn(async move {
-        let Some(message) = message else {
-            return;
-        };
 
-        tokio::time::sleep(Duration::from_secs(15)).await;
-
-        ctx_clone.delete_message(message).await.ok();
-    });
+    if let Some(message) = message {
+        let ctx_clone = ctx.clone();
+        util::set_tokio_timeout(Duration::from_secs(10), async move {
+            ctx_clone.delete_message(message).await.ok();
+        });
+    }
 
     tokio::time::sleep(Duration::from_secs(1)).await;
 
@@ -161,13 +154,16 @@ async fn check_or_handle_battle(
             name: format!("{} venceu!", winner.name),
             icon_url: winner.user.clone().map(|u| u.avatar_url()),
         })
-        .set_thumbnail(
+        .set_thumbnail(if let Some(anomaly) = winner.clone().anomaly {
+            anomaly.image().to_owned()
+        } else {
             winner
+                .clone()
                 .user
                 .clone()
                 .map(|u| u.avatar_url())
-                .unwrap_or_else(|| ".".to_string()),
-        )
+                .unwrap_or_else(|| ".".to_string())
+        })
         .set_description(format!(
             "{} venceu com {} vida restando!",
             winner.name, winner.health
@@ -191,6 +187,7 @@ async fn check_or_handle_battle(
 
     Ok(BattleResult {
         battle: battle.to_owned(),
+        all_fighters: battle.fighters.clone(),
         defeated_fighters: battle
             .fighters
             .iter()
