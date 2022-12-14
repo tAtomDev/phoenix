@@ -1,8 +1,10 @@
 pub mod user_model;
+pub mod cooldown;
 
+use cooldown::{CooldownData, CooldownType};
 use data::Stat;
 use data::classes::CharacterClass;
-use mongodb::{bson::doc, Database as MongoDatabase, Client, Collection, error::Error, results::UpdateResult};
+use mongodb::{bson::{doc, oid::ObjectId}, Database as MongoDatabase, Client, Collection, error::Error, results::UpdateResult};
 use user_model::UserData;
 
 #[derive(Debug, Clone)]
@@ -29,7 +31,55 @@ impl Database {
         self.db().collection_with_type::<UserData>("user")
     }
 
-    pub async fn register_user_data(&self, user_id: String, class: CharacterClass) -> Result<(), mongodb::error::Error>  {
+    pub fn cooldown_collection(&self) -> Collection<CooldownData> {
+        self.db().collection_with_type::<CooldownData>("cooldown")
+    }
+
+    pub async fn create_user_cooldown(&self, user_id: &String, cooldown_type: CooldownType, expires_at: i64) -> Result<(), Error> {
+        if let Ok(Some(cooldown)) = self.get_user_cooldown(user_id, cooldown_type).await {
+            if !cooldown.expired() {
+                return Ok(());
+            }
+
+            self.delete_user_cooldown(user_id, cooldown_type).await?;
+        }
+        
+        let cooldown_collection = self.cooldown_collection();
+        
+        let cooldown = CooldownData {
+            id: ObjectId::new(),
+            cooldown_type,
+            expires_at,
+            user_id: user_id.to_string()
+        };
+
+        cooldown_collection.insert_one(cooldown, None).await?;
+        Ok(())
+    }
+
+    pub async fn delete_user_cooldown(&self, user_id: &String, cooldown_type: CooldownType) -> Result<(), Error> {
+        let cooldown_collection = self.cooldown_collection();
+        
+        cooldown_collection.delete_one(doc! {
+            "userId": user_id,
+            "cooldownType": cooldown_type.to_string()
+        }, None).await?;
+
+        Ok(())
+    }
+
+    pub async fn get_user_cooldown(&self, user_id: &String, cooldown_type: CooldownType) -> Result<Option<CooldownData>, Error> {
+        let cooldown_collection = self.cooldown_collection();
+        
+        Ok(
+            cooldown_collection.find_one(doc! {
+                "userId": user_id,
+                "cooldownType": cooldown_type.to_string()
+            }, None).await?
+        )
+    }
+
+    pub async fn register_user_data(&self, user_id: &String, class: CharacterClass) -> Result<(), Error>  {
         let user_collection = self.user_collection();
 
         let mut user = UserData::new(user_id.into(), class.class_type);
@@ -43,7 +93,7 @@ impl Database {
         Ok(())
     }
 
-    async fn get_raw_user_data(&self, user_id: String) -> Result<Option<UserData>, Error> {
+    async fn get_raw_user_data(&self, user_id: &String) -> Result<Option<UserData>, Error> {
         let user_collection = self.user_collection();
         
         Ok(
@@ -53,16 +103,16 @@ impl Database {
         )
     }
 
-    pub async fn is_user_registered(&self, user_id: String) -> bool {
-        let Ok(data) = self.get_raw_user_data(user_id.clone()).await else {
+    pub async fn is_user_registered(&self, user_id: &String) -> bool {
+        let Ok(data) = self.get_raw_user_data(user_id).await else {
             return false;
         };
 
         data.is_some()
     }
 
-    pub async fn get_user_data(&self, user_id: String) -> Result<Option<UserData>, Error> {
-        let data = self.get_raw_user_data(user_id.clone()).await?;
+    pub async fn get_user_data(&self, user_id: &String) -> Result<Option<UserData>, Error> {
+        let data = self.get_raw_user_data(user_id).await?;
 
         Ok(data)
     }

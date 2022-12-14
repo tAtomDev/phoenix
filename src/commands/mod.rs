@@ -8,8 +8,8 @@ mod adventure;
 mod battle;
 mod ping;
 mod profile;
-mod start;
 mod rest;
+mod start;
 
 lazy_static! {
     pub static ref COMMANDS: HashMap<&'static str, Box<dyn Command + Send + Sync>> = {
@@ -58,7 +58,9 @@ pub mod prelude {
     pub use crate::discord::Response;
     pub use crate::prelude::DynamicError;
     pub use async_trait::async_trait;
+    pub use chrono::Duration;
     pub use data::*;
+    pub use database::cooldown::CooldownType;
     pub(crate) use format as f;
     pub use util::*;
 
@@ -75,4 +77,10 @@ pub mod prelude {
             Id,
         },
     };
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    pub enum CommandFlow {
+        ShouldStop,
+        ShouldContinue,
+    }
 }

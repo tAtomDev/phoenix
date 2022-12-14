@@ -1,7 +1,11 @@
 #![allow(unused)]
 use std::{sync::Arc, time::Duration};
 
-use database::Database;
+use chrono::Utc;
+use database::{
+    cooldown::{CooldownData, CooldownType},
+    Database,
+};
 use twilight_http::{
     client::InteractionClient, response::marker::EmptyBody, Client as HttpClient,
     Response as HttpResponse,
@@ -28,7 +32,7 @@ use twilight_model::{
 };
 use twilight_standby::Standby;
 
-use crate::{config, DynamicError};
+use crate::{commands::prelude::CommandFlow, config, DynamicError};
 
 use super::{
     component::{ActionRowBuilder, ButtonBuilder},
@@ -86,12 +90,9 @@ impl CommandContext {
 
     pub async fn author(&self) -> Result<User, DynamicError> {
         let id = self.author_id()?;
-        let user = self.http.user(id).await?.model().await;
+        let user = self.http.user(id).await?.model().await?;
 
-        match user {
-            Ok(user) => Ok(user),
-            _ => Err("User not found")?,
-        }
+        Ok(user)
     }
 
     pub fn db(&self) -> &database::Database {
@@ -100,6 +101,85 @@ impl CommandContext {
 
     pub fn options(&'_ self) -> OptionHandler<'_> {
         OptionHandler { ctx: self }
+    }
+
+    pub async fn get_user_cooldown(
+        &self,
+        user_id: Id<UserMarker>,
+        cooldown_type: CooldownType,
+    ) -> Result<Option<CooldownData>, DynamicError> {
+        Ok(self
+            .db()
+            .get_user_cooldown(&user_id.to_string(), cooldown_type)
+            .await?)
+    }
+
+    pub async fn delete_user_cooldown(
+        &self,
+        user_id: Id<UserMarker>,
+        cooldown_type: CooldownType,
+    ) -> Result<(), DynamicError> {
+        self.db()
+            .delete_user_cooldown(&user_id.to_string(), cooldown_type)
+            .await?;
+        return Ok(());
+    }
+
+    pub async fn create_user_cooldown(
+        &self,
+        user_id: Id<UserMarker>,
+        cooldown_type: CooldownType,
+        duration: chrono::Duration,
+    ) -> Result<(), DynamicError> {
+        let expires_at = Utc::now().timestamp_millis() + duration.num_milliseconds();
+
+        self.db()
+            .create_user_cooldown(&user_id.to_string(), cooldown_type, expires_at)
+            .await?;
+
+        Ok(())
+    }
+
+    pub async fn check_user_cooldown(
+        &mut self,
+        user_id: Id<UserMarker>,
+        cooldown_type: CooldownType,
+        duration: chrono::Duration,
+    ) -> Result<CommandFlow, DynamicError> {
+        let Some(cooldown) = self.get_user_cooldown(user_id, cooldown_type).await? else {
+            self.create_user_cooldown(user_id, cooldown_type, duration).await?;
+            return Ok(CommandFlow::ShouldContinue);
+        };
+
+        let user = self.http.user(user_id).await?.model().await?;
+
+        if cooldown.expired() {
+            self.db()
+                .delete_user_cooldown(&user_id.to_string(), cooldown_type)
+                .await?;
+            return Ok(CommandFlow::ShouldContinue);
+        }
+
+        let seconds = cooldown.remaining_milis() / 1000;
+        let minutes = cooldown.remaining_milis() / 60_000;
+
+        self.send(
+            Response::new_user_reply(
+                user,
+                format!(
+                    "aguarde mais `{}` para fazer isso novamente!",
+                    if minutes > 0 {
+                        format!("{minutes} minutos")
+                    } else {
+                        format!("{seconds} segundos")
+                    }
+                ),
+            )
+            .set_emoji_prefix("⏳"),
+        )
+        .await?;
+
+        Ok(CommandFlow::ShouldStop)
     }
 
     pub async fn create_confirmation(&mut self, user: User, response: Response) -> bool {
@@ -146,13 +226,11 @@ impl CommandContext {
     }
 
     pub async fn send(&mut self, response: Response) -> Result<Message, DynamicError> {
-        if self.already_replied {
-            Ok(self.send_in_channel(response).await?)
-        } else {
-            self.reply(response).await?;
+        let Ok(_) = self.reply(response.clone()).await else {
+            return Ok(self.send_in_channel(response).await?);
+        };
 
-            Ok(self.fetch_reply().await?)
-        }
+        Ok(self.fetch_reply().await?)
     }
 
     pub async fn update_interaction(&self, response: Response) -> Result<(), DynamicError> {
@@ -190,7 +268,7 @@ impl CommandContext {
     pub async fn send_in_channel(&self, response: Response) -> Result<Message, DynamicError> {
         let mut message = self
             .http
-            .create_message(self.interaction.channel_id.unwrap());
+            .create_message(self.interaction.channel_id.ok_or("Channel ID not found")?);
 
         let response: InteractionResponseData = response.into();
 

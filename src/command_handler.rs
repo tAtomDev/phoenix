@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::{
     commands::{
-        prelude::{CommandBuilder, CommandContext, Response},
+        prelude::{CommandBuilder, CommandContext, EmbedField, EmbedFooter, Response},
         COMMANDS,
     },
     config,
@@ -63,7 +63,7 @@ impl CommandHandler {
         if config.character_required
             && ctx
                 .db()
-                .get_user_data(author.id.to_string())
+                .get_user_data(&author.id.to_string())
                 .await?
                 .is_none()
         {
@@ -75,17 +75,57 @@ impl CommandHandler {
 
         // Error handling & run command
         if let Err(err) = command.run(ctx.clone()).await {
-            let embed = EmbedBuilder::new()
+            let err = format!("```rs\n{:?}\n```", err);
+            if err
+                .to_lowercase()
+                .contains("interaction has already been acknowledged")
+                || err.to_lowercase().contains("unknown interaction")
+            {
+                return Ok(());
+            }
+
+            let mut embed = EmbedBuilder::new()
                 .set_author(EmbedAuthor {
                     name: "Algo deu errado!".into(),
                     icon_url: Some(author.avatar_url()),
                 })
                 .set_color(Color::RED)
-                .set_description(format!("```rs\n{:#?}\n```", err))
+                .set_description(err)
+                .add_field(EmbedField {
+                    name: "Informações".into(),
+                    value: format!(
+                        "Comando: `{}`\nOpções: `{:?}`\nID do usuário: `{}`",
+                        data.name,
+                        data.options,
+                        ctx.author_id()?
+                    ),
+                    inline: true,
+                })
                 .set_current_timestamp();
 
-            ctx.send_in_channel(Response::from_embeds(vec![embed]))
+            let error_code = format!("{}#{}", author.id, chrono::Utc::now().timestamp_micros());
+
+            let embed = embed.set_footer(EmbedFooter {
+                text: format!("{}", error_code),
+                icon_url: None,
+            });
+
+            ctx.http
+                .execute_webhook(
+                    Id::new(1052621285747859587),
+                    "pFpSG-HdqhOCzJg8bX9LMR-1pM2Fn21HnjiVVT6uTkQlVCDWR9zFkP_X8aIHtOoeldVI",
+                )
+                .embeds(&[embed.build()])?
                 .await?;
+
+            ctx.send_in_channel(Response::new_user_reply(
+                author,
+                format!(
+                    "algo deu errado!\nCódigo do erro:\n```cs\n{}\n```",
+                    error_code
+                ),
+            ))
+            .await?;
         };
 
         Ok(())

@@ -26,9 +26,13 @@ impl Command for AdventureCommand {
         let author_id = author.id;
         let mut author_data = ctx
             .db()
-            .get_user_data(author.id.to_string())
+            .get_user_data(&author.id.to_string())
             .await?
             .ok_or("Invalid data")?;
+
+        if author_data.health.value < 15 {
+            return ctx.reply(Response::new_user_reply(author, "você está sem vida para batalhar! Use **/descansar** antes de partir para uma nova aventura.").error_response()).await;
+        }
 
         let author_fighter = Fighter::create_from_user_data(author.clone(), author_data.clone())?;
 
@@ -41,7 +45,7 @@ impl Command for AdventureCommand {
                 icon_url: Some(author.avatar_url()),
             })
             .add_field(EmbedField {
-                name: anomaly.name().to_string(),
+                name: f!("{} (nível {})", anomaly.name(), anomaly.level),
                 value: f!("{}", anomaly_fighter.display_full_stats()),
                 inline: false,
             })

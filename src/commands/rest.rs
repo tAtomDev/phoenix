@@ -9,14 +9,28 @@ impl Command for RestCommand {
     }
 
     fn build_command(&self, application_id: Id<ApplicationMarker>) -> CommandBuilder {
-        CommandBuilder::new(application_id, "descansar", "Descanse após uma longa e complicada batalha")
+        CommandBuilder::new(
+            application_id,
+            "descansar",
+            "Descanse após uma longa e complicada batalha",
+        )
     }
 
     async fn run(&self, mut ctx: CommandContext) -> CommandResult {
+        let author_id = ctx.author_id()?;
+
+        if ctx
+            .check_user_cooldown(author_id, CooldownType::Rest, Duration::minutes(20))
+            .await?
+            == CommandFlow::ShouldStop
+        {
+            return Ok(());
+        }
+
         let author = ctx.author().await?;
         let mut author_data = ctx
             .db()
-            .get_user_data(author.id.to_string())
+            .get_user_data(&author.id.to_string())
             .await?
             .ok_or("Invalid data")?;
 
@@ -25,7 +39,8 @@ impl Command for RestCommand {
 
         ctx.db().save_user_data(author_data).await?;
 
-        ctx.reply(Response::new_user_reply(author, "você descansou!").set_emoji_prefix("⚡")).await?;
+        ctx.reply(Response::new_user_reply(author, "você descansou!").set_emoji_prefix("⚡"))
+            .await?;
 
         Ok(())
     }

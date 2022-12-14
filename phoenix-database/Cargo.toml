@@ -8,6 +8,7 @@ edition = "2021"
 tracing = "0.1.37"
 serde = "1.0.149"
 rand = "0.8.5"
+chrono = "0.4.23"
 data = { path = "../phoenix-data" }
 util = { path = "../phoenix-util" }
 

@@ -52,7 +52,7 @@ impl UserData {
 
         let rng = &mut rand::thread_rng();
 
-        let mut attributes_points = 0;
+        let mut attributes_points = 2;
 
         let (lower_range, upper_range) = (
             (self.level / 3).max(1),

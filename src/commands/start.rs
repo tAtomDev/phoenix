@@ -1,9 +1,6 @@
 use std::time::Duration;
 
-use twilight_model::{
-    application::interaction::InteractionData,
-    channel::message::ReactionType
-};
+use twilight_model::{application::interaction::InteractionData, channel::message::ReactionType};
 
 use crate::discord::extensions::StandbyExtension;
 
@@ -24,7 +21,7 @@ impl Command for StartCommand {
 
     async fn run(&self, mut ctx: CommandContext) -> CommandResult {
         let author = ctx.author().await?;
-        let user_data = ctx.db().get_user_data(author.id.to_string()).await?;
+        let user_data = ctx.db().get_user_data(&author.id.to_string()).await?;
         if user_data.is_some() {
             return ctx
                 .reply(Response::new_user_reply(
@@ -35,17 +32,20 @@ impl Command for StartCommand {
         }
 
         let embed = EmbedBuilder::new()
-            .set_color(Color::DARK_ORANGE)
-            .set_author(EmbedAuthor { name: f!("{}, escolha sua classe!", author.name), icon_url: Some(author.avatar_url()) })
+            .set_color(Color::BLURPLE)
+            .set_author(EmbedAuthor {
+                name: f!("{}, escolha sua classe!", author.name),
+                icon_url: Some(author.avatar_url()),
+            })
             .add_fields(
                 &mut data::classes::ALL_CLASSES
                     .iter()
                     .map(|c| EmbedField {
                         name: f!("{}, {}", c.emoji, c.name),
                         value: c.description.into(),
-                        inline: false
+                        inline: false,
                     })
-                    .collect()
+                    .collect(),
             )
             .set_current_timestamp();
 
@@ -53,12 +53,15 @@ impl Command for StartCommand {
             .add_buttons(
                 data::classes::ALL_CLASSES
                     .iter()
-                    .map(|c| 
+                    .map(|c| {
                         ButtonBuilder::new()
-                        .set_custom_id(c.name).set_label(c.name)
-                        .set_emoji(ReactionType::Unicode { name: c.emoji.into() })
-                    )
-                    .collect()
+                            .set_custom_id(c.name)
+                            .set_label(c.name)
+                            .set_emoji(ReactionType::Unicode {
+                                name: c.emoji.into(),
+                            })
+                    })
+                    .collect(),
             )
             .build();
 
@@ -72,7 +75,7 @@ impl Command for StartCommand {
         let message = ctx.fetch_reply().await?;
 
         let standby = ctx.standby.clone();
-        let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(12 & 0), move |event| {
+        let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(120), move |event| {
             event.author_id() == Some(author.id)
         }).await else {
             return Ok(());
@@ -81,13 +84,14 @@ impl Command for StartCommand {
         let interaction = Box::new(component);
         let mut ctx = CommandContext::from_with_interaction(&ctx, interaction.clone());
 
-        let Some(InteractionData::MessageComponent(data)) = interaction.data else { return Ok(()); };
+        let Some(InteractionData::MessageComponent(data)) = interaction.data else {
+            Err("Data not found")? 
+        };
 
-        let class =
-            data::classes::get_class_by_name(data.values[0].clone()).ok_or("Invalid class")?;
+        let class = data::classes::get_class_by_name(data.custom_id).ok_or("Invalid class")?;
 
         ctx.db()
-            .register_user_data(author.id.to_string(), class)
+            .register_user_data(&author.id.to_string(), class)
             .await?;
 
         ctx.reply(

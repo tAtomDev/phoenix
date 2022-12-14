@@ -23,7 +23,7 @@ impl Command for ProfileCommand {
         let author = ctx.author().await?;
         let user_data = ctx
             .db()
-            .get_user_data(author.id.to_string())
+            .get_user_data(&author.id.to_string())
             .await?
             .ok_or("User data not found")?;
 

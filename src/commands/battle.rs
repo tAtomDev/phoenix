@@ -60,7 +60,7 @@ impl Command for BattleCommand {
             return Ok(());
         }
 
-        if !ctx.db().is_user_registered(user.id.to_string()).await {
+        if !ctx.db().is_user_registered(&user.id.to_string()).await {
             ctx.send(
                 Response::from_string(f!("**{}** não iniciou sua jornada ainda!", user.name))
                     .error_response(),
@@ -72,13 +72,13 @@ impl Command for BattleCommand {
         let author = ctx.author().await?;
         let author_data = ctx
             .db()
-            .get_user_data(author.id.to_string())
+            .get_user_data(&author.id.to_string())
             .await?
             .ok_or("Invalid data")?;
 
         let user_data = ctx
             .db()
-            .get_user_data(user.id.to_string())
+            .get_user_data(&user.id.to_string())
             .await?
             .ok_or("Invalid data")?;
 
@@ -89,7 +89,7 @@ impl Command for BattleCommand {
 
         let battle = &mut battle::Battle::new(fighters)?;
 
-        battle::util::handle_battle(&ctx, battle).await.unwrap();
+        battle::util::handle_battle(&ctx, battle).await?;
 
         Ok(())
     }

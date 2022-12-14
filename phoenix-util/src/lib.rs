@@ -2,7 +2,7 @@
 
 use std::{time::Duration, future::Future};
 
-use tokio::task::JoinHandle;
+use tokio::{task::JoinHandle, time};
 
 pub mod math;
 
@@ -74,4 +74,25 @@ where
 
         future.await
     })
+}
+
+// https://users.rust-lang.org/t/setinterval-in-rust/41664
+fn set_tokio_interval<F, Fut>(mut f: F, duration: Duration)
+where
+    F: Send + 'static + FnMut() -> Fut,
+    Fut: Future<Output = ()> + Send + 'static,
+{
+    // Create stream of intervals.
+    let mut interval = time::interval(duration);
+    
+    tokio::spawn(async move {
+        // Skip the first tick at 0ms.
+        interval.tick().await;
+        loop {
+            // Wait until next tick.
+            interval.tick().await;
+            // Spawn a task for this tick.
+            tokio::spawn(f());
+        }
+    });
 }

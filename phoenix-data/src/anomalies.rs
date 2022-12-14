@@ -133,7 +133,7 @@ pub const OOZELING: AnomalyDefinition = AnomalyDefinition {
 };
 
 pub const NIGHTFALL: AnomalyDefinition = AnomalyDefinition {
-    anomaly_type: AnomalyType::Oozeling,
+    anomaly_type: AnomalyType::Nightfall,
     health: Stat::new(110),
     mana: Stat::new(30),
     strength: 30,
@@ -143,40 +143,44 @@ pub const NIGHTFALL: AnomalyDefinition = AnomalyDefinition {
 
 pub const ANOMALIES: [AnomalyDefinition; 5] = [ORC, GUARDIAN, FERAK, OOZELING, NIGHTFALL];
 
-pub fn multiplier_from_level(rng: &mut ThreadRng, factor: i32, level: i32) -> f32 {
-    let roll: f32 = rng.gen();
-    let base = 1.0 + (roll * (level as f32 / 100.0) * factor as f32);
-    let result = base;
-    
-    result
+pub fn factor(rng: &mut ThreadRng, level: i32, extra_factor: f32) -> f32 {
+    let level = level + 1;
+    (level + (level / 2)) as f32 * 0.5 * rng.gen_range(0.3..1.25) * (extra_factor / 2.0)
 }
+
+pub fn calculate_potency(rng: &mut ThreadRng, health: f32, mana: f32, strength: f32, agility: f32, intelligence: f32) -> f32 {
+    (health * 1.1 + mana * 1.1 + (strength + strength / 1.5f32)) + (agility + intelligence + rng.gen_range(1f32..5f32)) / rng.gen_range(6.85..8.0)
+}
+
 
 pub fn generate_random_anomaly(player_level: i32) -> Anomaly {
     let mut rng = rand::thread_rng();
     let random_index = rng.gen_range(0..ANOMALIES.len());
-    let anomaly_definition = ANOMALIES[random_index];
+    let def = ANOMALIES[random_index];
 
-    let level = player_level;
-    let health = Stat::new((anomaly_definition.health.max as f32 * multiplier_from_level(&mut rng, 10, level)) as i32);
-    let mana = Stat::new((anomaly_definition.mana.max as f32 * multiplier_from_level(&mut rng, 5, level)) as i32);
-    let strength = (anomaly_definition.strength as f32 * multiplier_from_level(&mut rng, 5, level)) as i32;
-    let agility = (anomaly_definition.agility as f32 * multiplier_from_level(&mut rng, 8, level)) as i32;
-    let intelligence = (anomaly_definition.intelligence as f32 * multiplier_from_level(&mut rng, 8, level)) as i32;
+    let level = ((player_level + 1) as f32 * rng.gen_range(0.7..1.3)) as i32;
+    let health = Stat::new((factor(&mut rng, level, 1.3) * def.health.max as f32) as i32);
+    let mana = Stat::new((factor(&mut rng, level, 1.2) * def.mana.max as f32) as i32);
+    let strength = (factor(&mut rng, level, 1.3) * def.strength as f32) as i32;
+    let agility = (factor(&mut rng, level, 1.25) * def.agility as f32) as i32;
+    let intelligence = (factor(&mut rng, level, 1.0) * def.intelligence as f32) as i32;
 
-    let xp = (multiplier_from_level(&mut rng, 100, level) * 50f32) as i32;
-    let xp_reward = (level * 100) + rng.gen_range(-xp..xp);
-    let gold_reward = 10 + rng.gen_range(-5..=5) * multiplier_from_level(&mut rng, 25, level) as i32;
+    let potency = calculate_potency(&mut rng, health.max as f32, mana.max as f32, strength as f32, agility as f32, intelligence as f32);
+    let value = ((potency * rng.gen_range(0.9..1.1)) as i32).max(1);
+
+    let xp_reward = rng.gen_range(3..7) * level * (value / 5);
+    let gold_reward = rng.gen_range(1..3) * level * (value / 9);
 
     Anomaly {
-        definition: anomaly_definition,
-        anomaly_type: anomaly_definition.anomaly_type,
+        definition: def,
+        anomaly_type: def.anomaly_type,
         variant: None,
         health,
         mana,
-        strength,
-        agility,
-        intelligence,
-        level,
+        strength: strength.max(1),
+        agility: agility.max(1),
+        intelligence: intelligence.max(1),
+        level: level.max(1),
         rewards: AnomalyDrops { xp: xp_reward, gold: gold_reward }
     }
 }
