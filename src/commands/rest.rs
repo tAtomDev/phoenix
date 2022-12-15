@@ -19,6 +19,22 @@ impl Command for RestCommand {
     async fn run(&self, mut ctx: CommandContext) -> CommandResult {
         let author_id = ctx.author_id()?;
 
+        let author = ctx.author().await?;
+        let mut author_data = ctx
+            .db()
+            .get_user_data(&author.id.to_string())
+            .await?
+            .ok_or("Invalid data")?;
+
+        if author_data.health.value as f32 > (author_data.health.max as f32 * 0.8) {
+            return ctx
+                .reply(
+                    Response::new_user_reply(author, "você não precisa descansar!")
+                        .error_response(),
+                )
+                .await;
+        }
+
         if ctx
             .check_user_cooldown(author_id, CooldownType::Rest, Duration::minutes(20))
             .await?
@@ -26,13 +42,6 @@ impl Command for RestCommand {
         {
             return Ok(());
         }
-
-        let author = ctx.author().await?;
-        let mut author_data = ctx
-            .db()
-            .get_user_data(&author.id.to_string())
-            .await?
-            .ok_or("Invalid data")?;
 
         author_data.restore_health();
         author_data.restore_mana();

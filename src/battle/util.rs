@@ -154,16 +154,7 @@ async fn check_or_handle_battle(
             name: format!("{} venceu!", winner.name),
             icon_url: winner.user.clone().map(|u| u.avatar_url()),
         })
-        .set_thumbnail(if let Some(anomaly) = winner.clone().anomaly {
-            anomaly.image().to_owned()
-        } else {
-            winner
-                .clone()
-                .user
-                .clone()
-                .map(|u| u.avatar_url())
-                .unwrap_or_else(|| ".".to_string())
-        })
+        .set_thumbnail(winner.image())
         .set_description(format!(
             "{} venceu com {} vida restando!",
             winner.name, winner.health

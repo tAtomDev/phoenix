@@ -7,7 +7,7 @@ pub enum Emoji {
     Strength,
     Intelligence,
     Agility,
-    Experience
+    Experience,
 }
 
 impl Emoji {
@@ -19,7 +19,7 @@ impl Emoji {
             Emoji::Intelligence => "🧠",
             Emoji::Strength => "💪",
             Emoji::Agility => "🪶",
-            Emoji::Experience => "🔹"
+            Emoji::Experience => "🔹",
         }
     }
 

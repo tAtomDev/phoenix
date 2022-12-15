@@ -4,7 +4,7 @@ use rand::Rng;
 use twilight_model::user::User as DiscordUser;
 
 use super::{Action, Battle};
-use crate::commands::prelude::DynamicError;
+use crate::commands::prelude::{DynamicError, UserExtension};
 use util::math;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -74,6 +74,17 @@ impl Fighter {
 
     pub fn take_damage(&mut self, damage: i32) {
         self.health.subtract_value(damage);
+    }
+
+    pub fn image(&self) -> String {
+        if let Some(anomaly) = self.anomaly {
+            anomaly.image().into()
+        } else {
+            self.user
+                .clone()
+                .map(|u| u.avatar_url())
+                .unwrap_or("https://i.imgur.com/Kl2qRLF.png".into())
+        }
     }
 
     pub fn display_full_stats(&self) -> String {

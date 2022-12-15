@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use rand::Rng;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Probability(u8);
@@ -39,15 +39,12 @@ pub struct Stat {
     #[serde(default = "default")]
     pub max: i32,
     #[serde(default = "default")]
-    pub value: i32
+    pub value: i32,
 }
 
 impl Stat {
     pub const fn new(value: i32) -> Self {
-        Self {
-            value,
-            max: value
-        }
+        Self { value, max: value }
     }
 
     pub fn percentage(&self) -> i32 {

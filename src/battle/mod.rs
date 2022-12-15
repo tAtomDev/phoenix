@@ -64,8 +64,9 @@ impl From<Round> for EmbedBuilder {
         Self::new()
             .set_author(EmbedAuthor {
                 name: f!("{} usou {}", round.fighter.name, round.action.name()),
-                icon_url: round.fighter.user.map(|u| u.avatar_url()),
+                icon_url: Some(round.fighter.image()),
             })
+            .set_thumbnail(round.fighter.image())
             .set_color(Color::LIGHT_ORANGE)
             .set_description(round.messages.join("\n"))
             .set_current_timestamp()

@@ -1,11 +1,11 @@
 #![allow(unused)]
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ClassType {
     Knight,
     Mage,
-    Assassin
+    Assassin,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -64,5 +64,8 @@ pub fn get_class_by_name(name: String) -> Option<CharacterClass> {
 }
 
 pub fn get_class_by_type(class_type: ClassType) -> Option<CharacterClass> {
-    ALL_CLASSES.iter().find(|c| c.class_type == class_type).copied()
+    ALL_CLASSES
+        .iter()
+        .find(|c| c.class_type == class_type)
+        .copied()
 }

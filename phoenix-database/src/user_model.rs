@@ -1,33 +1,59 @@
 use data::classes::ClassType;
-use mongodb::bson::{oid::ObjectId};
-use rand::{Rng, seq::SliceRandom};
-use serde::{Serialize, Deserialize};
+use mongodb::bson::oid::ObjectId;
+use rand::{seq::SliceRandom, Rng};
+use serde::{Deserialize, Serialize};
 
 use data::Stat;
 
-const fn default_class() -> ClassType { ClassType::Knight }
-const fn default_gold() -> i32 { 10 }
-const fn default_journey() -> f32 { 0.0 }
-const fn default_strength() -> i32 { 20 }
-const fn default_agi_intel() -> i32 { 5 }
-const fn default_xp() -> i32 { 0 }
-const fn default_level() -> i32 { 1 }
+const fn default_class() -> ClassType {
+    ClassType::Knight
+}
+const fn default_gold() -> i32 {
+    10
+}
+const fn default_journey() -> f32 {
+    0.0
+}
+const fn default_strength() -> i32 {
+    20
+}
+const fn default_agi_intel() -> i32 {
+    5
+}
+const fn default_xp() -> i32 {
+    0
+}
+const fn default_level() -> i32 {
+    1
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserData {
-    #[serde(rename = "_id")]                    pub id: ObjectId,
-    #[serde(default)]                           pub user_id: String,
-    #[serde(default = "default_class")]         pub class: ClassType,
-    #[serde(default = "default_gold")]          pub gold: i32,
-    #[serde(default)]                           pub health: Stat,
-    #[serde(default)]                           pub mana: Stat,
-    #[serde(default = "default_journey")]       pub journey: f32,
-    #[serde(default = "default_strength")]      pub strength: i32,
-    #[serde(default = "default_agi_intel")]     pub agility: i32,
-    #[serde(default = "default_agi_intel")]     pub intelligence: i32,
-    #[serde(default = "default_xp")]            pub xp: i32,
-    #[serde(default = "default_level")]         pub level: i32
+    #[serde(rename = "_id")]
+    pub id: ObjectId,
+    #[serde(default)]
+    pub user_id: String,
+    #[serde(default = "default_class")]
+    pub class: ClassType,
+    #[serde(default = "default_gold")]
+    pub gold: i32,
+    #[serde(default)]
+    pub health: Stat,
+    #[serde(default)]
+    pub mana: Stat,
+    #[serde(default = "default_journey")]
+    pub journey: f32,
+    #[serde(default = "default_strength")]
+    pub strength: i32,
+    #[serde(default = "default_agi_intel")]
+    pub agility: i32,
+    #[serde(default = "default_agi_intel")]
+    pub intelligence: i32,
+    #[serde(default = "default_xp")]
+    pub xp: i32,
+    #[serde(default = "default_level")]
+    pub level: i32,
 }
 
 impl UserData {
@@ -54,10 +80,7 @@ impl UserData {
 
         let mut attributes_points = 2;
 
-        let (lower_range, upper_range) = (
-            (self.level / 3).max(1),
-            (self.level / 2).max(2)
-        );
+        let (lower_range, upper_range) = ((self.level / 3).max(1), (self.level / 2).max(2));
 
         while self.xp >= util::math::calculate_xp_required_for_level_up(self.level) {
             self.xp -= util::math::calculate_xp_required_for_level_up(self.level);
@@ -67,7 +90,7 @@ impl UserData {
 
         while attributes_points > 0 {
             let upgrades: Vec<Box<dyn Fn(&mut UserData, i32) -> ()>> = vec![
-                Box::new(UserData::add_max_health), 
+                Box::new(UserData::add_max_health),
                 Box::new(UserData::add_max_mana),
                 Box::new(UserData::add_strength),
                 Box::new(UserData::add_intelligence),
@@ -136,7 +159,7 @@ impl UserData {
     pub fn add_strength(&mut self, amount: i32) {
         self.strength += amount;
     }
-    
+
     pub fn add_intelligence(&mut self, amount: i32) {
         self.intelligence += amount;
     }
@@ -160,7 +183,7 @@ impl Default for UserData {
             agility: default_agi_intel(),
             intelligence: default_agi_intel(),
             xp: default_xp(),
-            level: default_level()
+            level: default_level(),
         }
     }
 }
