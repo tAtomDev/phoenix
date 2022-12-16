@@ -11,6 +11,7 @@ pub mod component;
 pub mod embed;
 pub mod extensions;
 pub mod option_handler;
+pub mod pagination;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Response {

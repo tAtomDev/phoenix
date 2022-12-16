@@ -1,7 +1,9 @@
 use std::time::Duration;
 
 use crate::battle::{self, Fighter};
-use data::anomalies;
+use data::{anomalies, regions::RegionType};
+use database::user_model::Region;
+use rand::{thread_rng, Rng};
 
 use super::prelude::*;
 
@@ -34,9 +36,40 @@ impl Command for AdventureCommand {
             return ctx.reply(Response::new_user_reply(author, "você está sem vida para batalhar! Use **/descansar** antes de partir para uma nova aventura.").error_response()).await;
         }
 
+        if author_data.journey.current_region.region_type == RegionType::City {
+            let confirmation = ctx.create_confirmation(
+                author.clone(),
+                Response::new_user_reply(
+                    author.clone(),
+                    f!(
+                        "se você sair em uma aventura, você não poderá voltar de novo para **{}**!\nVocê quer mesmo ir para uma aventura agora?", 
+                        author_data.journey.current_region.name
+                    )
+                ).set_emoji_prefix("🗺️")
+            ).await;
+
+            if !confirmation {
+                return Ok(());
+            }
+
+            let new_region = Region::generate_random_from_journey(author_data.journey.clone());
+
+            author_data.travel_distance(thread_rng().gen_range(0.65..0.7));
+            author_data.travel_to_region(new_region.clone());
+
+            ctx.db().save_user_data(author_data).await?;
+
+            ctx.send_in_channel(
+                Response::new_user_reply(author, f!("você saiu da sua cidade e caminhou até chegar em **{}**!", new_region.name))
+                .set_emoji_prefix(new_region.emoji())
+            ).await?;
+
+            return Ok(());
+        }
+
         let author_fighter = Fighter::create_from_user_data(author.clone(), author_data.clone())?;
 
-        let anomaly = anomalies::generate_random_anomaly(author_data.level);
+        let anomaly = anomalies::generate_random_anomaly(author_data.level, author_data.journey.current_region.region_type);
         let anomaly_fighter = Fighter::create_from_anomaly(anomaly)?;
 
         let embed = EmbedBuilder::new()
@@ -86,6 +119,9 @@ impl Command for AdventureCommand {
 
         if let Some(user) = winner.user {
             if user.id == author.id {
+                let distance = thread_rng().gen_range(0.2..0.4) as f32;
+                author_data.travel_distance(distance);
+
                 author_data.add_gold(anomaly.rewards.gold);
                 author_data.add_xp(anomaly.rewards.xp);
                 let new_level = author_data.level_up();
@@ -101,8 +137,27 @@ impl Command for AdventureCommand {
                     let author = author.clone();
 
                     #[rustfmt::skip]
-                    util::set_tokio_timeout(Duration::from_secs(3), async move {
-                        ctx.send_in_channel(Response::new_user_reply(author, f!("você agora está no nível **{}**", level))).await.ok();
+                    util::set_tokio_timeout(Duration::from_secs(1), async move {
+                        ctx.send_in_channel(
+                            Response::new_user_reply(author, f!("você agora está no nível **{}**", level))
+                        ).await.ok();
+                    });
+                }
+
+                if author_data.journey.region_history.len() == 0 || author_data.journey.total_traveled > (author_data.journey.current_region.distance + thread_rng().gen_range(0.8..1.2)) {
+                    let ctx = ctx.clone();
+                    let author = author.clone();
+                    let new_region = Region::generate_random_from_journey(author_data.journey.clone());
+
+                    author_data.travel_to_region(new_region.clone());
+
+                    let clone_region = new_region.clone();
+                    #[rustfmt::skip]
+                    util::set_tokio_timeout(Duration::from_secs(2), async move {
+                        ctx.send_in_channel(
+                            Response::new_user_reply(author, f!("você vagou e chegou em **{}**!", clone_region.name))
+                            .set_emoji_prefix(clone_region.emoji())
+                        ).await.ok();
                     });
                 }
             }

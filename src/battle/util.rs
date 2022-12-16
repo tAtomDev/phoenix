@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use async_recursion::async_recursion;
 use twilight_model::{
-    application::interaction::InteractionData,
+    application::interaction::{InteractionData, Interaction},
     channel::message::{
         component::{ActionRow, Button, ButtonStyle},
         Component, ReactionType,
@@ -14,7 +14,7 @@ use crate::{
     discord::{
         component::{ActionRowBuilder, ButtonBuilder},
         embed::{EmbedAuthor, EmbedBuilder, EmbedField},
-        extensions::{StandbyExtension, UserExtension},
+        extensions::{StandbyExtension, UserExtension}, pagination::EmbedPagination,
     },
 };
 use util::Color;
@@ -89,7 +89,7 @@ async fn wait_for_battle_action(
     let user = battle.current_fighter().user.clone().unwrap();
 
     let standby = ctx.standby.clone();
-    let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(500), move |event| {
+    let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(500), move |event: &Interaction| {
         event.author_id() == Some(user.id)
     }).await else {
         return Ok(None);
@@ -173,8 +173,38 @@ async fn check_or_handle_battle(
         })
         .set_current_timestamp();
 
-    ctx.send_in_channel(Response::from_embeds(vec![embed]))
-        .await?;
+    let mut embeds: Vec<EmbedBuilder> = vec![embed];
+    let rounds = battle.rounds.clone();
+    for i in (0..rounds.len()).step_by(3) {
+        let mut embed = EmbedBuilder::new()
+            .set_author(EmbedAuthor {
+                name: "Histórico da batalha".to_string(),
+                icon_url: Some(winner.image()),
+            })
+            .set_thumbnail(winner.image())
+            .set_color(Color::LIGHT_ORANGE)
+            .set_current_timestamp();
+        
+        for j in 0..3 {
+            let Some(round) = rounds.get(i + j) else {
+                break;
+            };
+
+            embed.add_field(EmbedField {
+                name: format!("- **`#{}`**: {} usou {}", (i + j), round.fighter.name, round.action.name()),
+                value: round.messages.join("\n") + "\n",
+                inline: false
+            });
+        }
+        
+        embeds.push(embed);
+    }
+    
+    EmbedPagination::new(ctx.clone(), embeds)
+        .send().await?;
+
+    //ctx.send_in_channel(Response::from_embeds(vec![embed]))
+    //    .await?;
 
     Ok(BattleResult {
         battle: battle.to_owned(),

@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::{Emoji, Stat};
+use crate::{Emoji, Stat, regions::RegionType};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AnomalyType {
@@ -58,6 +58,7 @@ pub struct AnomalyDefinition {
     pub strength: i32,
     pub agility: i32,
     pub intelligence: i32,
+    pub valid_regions: &'static [RegionType]
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -109,20 +110,22 @@ impl Anomaly {
 
 pub const TREANT: AnomalyDefinition = AnomalyDefinition {
     anomaly_type: AnomalyType::Treant,
-    health: Stat::new(50),
+    health: Stat::new(60),
     mana: Stat::new(10),
     strength: 10,
     agility: 1,
     intelligence: 3,
+    valid_regions: &[RegionType::Grassland]
 };
 
 pub const ORC: AnomalyDefinition = AnomalyDefinition {
     anomaly_type: AnomalyType::Orc,
-    health: Stat::new(80),
+    health: Stat::new(100),
     mana: Stat::new(10),
     strength: 20,
     agility: 5,
     intelligence: 3,
+    valid_regions: &[RegionType::Forest]
 };
 
 pub const VEXBUG: AnomalyDefinition = AnomalyDefinition {
@@ -132,6 +135,7 @@ pub const VEXBUG: AnomalyDefinition = AnomalyDefinition {
     strength: 10,
     agility: 3,
     intelligence: 15,
+    valid_regions: &[RegionType::Forest]
 };
 
 pub const GUARDIAN: AnomalyDefinition = AnomalyDefinition {
@@ -141,6 +145,7 @@ pub const GUARDIAN: AnomalyDefinition = AnomalyDefinition {
     strength: 12,
     agility: 5,
     intelligence: 10,
+    valid_regions: &[RegionType::Forest]
 };
 
 pub const FERAK: AnomalyDefinition = AnomalyDefinition {
@@ -150,6 +155,7 @@ pub const FERAK: AnomalyDefinition = AnomalyDefinition {
     strength: 30,
     agility: 5,
     intelligence: 1,
+    valid_regions: &[RegionType::Swamp, RegionType::Forest]
 };
 
 pub const OOZELING: AnomalyDefinition = AnomalyDefinition {
@@ -159,6 +165,7 @@ pub const OOZELING: AnomalyDefinition = AnomalyDefinition {
     strength: 10,
     agility: 15,
     intelligence: 2,
+    valid_regions: &[RegionType::Grassland]
 };
 
 pub const NIGHTFALL: AnomalyDefinition = AnomalyDefinition {
@@ -168,6 +175,7 @@ pub const NIGHTFALL: AnomalyDefinition = AnomalyDefinition {
     strength: 30,
     agility: 10,
     intelligence: 10,
+    valid_regions: &[RegionType::Grassland]
 };
 
 pub const TIMBERWRAITH: AnomalyDefinition = AnomalyDefinition {
@@ -177,6 +185,7 @@ pub const TIMBERWRAITH: AnomalyDefinition = AnomalyDefinition {
     strength: 20,
     agility: 15,
     intelligence: 10,
+    valid_regions: &[RegionType::Forest]
 };
 
 pub const ANOMALIES: [AnomalyDefinition; 8] = [
@@ -204,13 +213,16 @@ pub fn calculate_potency(
     intelligence: f32,
 ) -> f32 {
     (health * 1.1 + mana * 1.1 + (strength + strength / 1.5f32))
-        + (agility + intelligence + rng.gen_range(1f32..5f32)) / rng.gen_range(6.85..8.0)
+        + (agility + intelligence + rng.gen_range(2f32..7f32)) 
+        / rng.gen_range(6.85..7.0)
 }
 
-pub fn generate_random_anomaly(player_level: i32) -> Anomaly {
+pub fn generate_random_anomaly(player_level: i32, region_type: RegionType) -> Anomaly {
+    let valid_anomalies: Vec<&AnomalyDefinition> = ANOMALIES.iter().filter(|a| a.valid_regions.contains(&region_type)).collect();
+
     let rng = &mut rand::thread_rng();
-    let random_index = rng.gen_range(0..ANOMALIES.len());
-    let def = ANOMALIES[random_index];
+    let random_index = rng.gen_range(0..valid_anomalies.len());
+    let def = valid_anomalies[random_index];
 
     let level = (player_level as f32 * rng.gen_range(0.6..1.3)).max(1.0) as i32;
     let health = Stat::new((factor(rng, level, 1.3) * def.health.max as f32) as i32);
@@ -233,7 +245,7 @@ pub fn generate_random_anomaly(player_level: i32) -> Anomaly {
     let gold_reward = rng.gen_range(2..3) * level * (value / 9);
 
     Anomaly {
-        definition: def,
+        definition: *def,
         anomaly_type: def.anomaly_type,
         variant: None,
         health,

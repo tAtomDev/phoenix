@@ -1,6 +1,7 @@
 use std::fmt::Display;
 
-use rand::Rng;
+use inflector::Inflector;
+use rand::{Rng, thread_rng, seq::SliceRandom};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -69,7 +70,7 @@ impl Stat {
 
     pub fn add_max_value(&mut self, amount: i32) {
         self.max += amount;
-        self.value += amount;
+        self.add_value(amount);
     }
 
     pub fn subtract_max_value(&mut self, amount: i32) {
@@ -91,4 +92,50 @@ impl Default for Stat {
 
 fn default() -> i32 {
     100
+}
+
+
+const VOWELS: [&'static str; 5] = ["a", "e", "i", "o", "u"];
+const CONSONANTS: [&'static str; 24] = ["b", "c", "d", "f", "g", "h", "j", "k", "l", "l", "m", "n", "p", "q", "r", "s", "t", "v", "w", "x", "y", "z", "lh", "ch"];
+const REMAINESCENTS: [&'static str; 5] = ["r", "s", "l", "m", "n"];
+
+pub fn invent_word(syllables: u8) -> Option<String> {
+    let rng = &mut thread_rng();
+    let mut string = String::new();
+
+    for i in 0..=syllables {
+        let consonant = CONSONANTS.choose(rng)?;
+        let vowel = VOWELS.choose(rng)?;
+        
+        string.push_str(format!("{consonant}{vowel}").as_str());
+
+        // End of name
+        if i == syllables {
+            if !rng.gen_bool(0.3) {
+                continue;
+            }
+
+            string.push_str(REMAINESCENTS.choose(rng)?);
+        }
+    }
+
+    Some(string.to_title_case())
+}
+
+pub fn generate_name(prefix: &str, first_suffix: Vec<&str>, possible_second_suffix: Option<Vec<&str>>, possible_last_suffix: Option<Vec<&str>>) -> Option<String> {
+    let rng = &mut thread_rng();
+    let mut name = format!("{prefix} {}", first_suffix.choose(rng)?);
+    if let Some(suffixes) = possible_second_suffix {
+        if rng.gen_bool(0.7) {
+            name = format!("{name} {}", suffixes.choose(rng)?);
+        }
+    }
+
+    if let Some(suffixes) = possible_last_suffix {
+        if rng.gen_bool(0.3) {
+            name = format!("{name} {}", suffixes.choose(rng)?);
+        }
+    }
+
+    Some(name)
 }

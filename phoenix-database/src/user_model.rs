@@ -1,6 +1,6 @@
-use data::classes::ClassType;
+use data::{classes::ClassType, regions::{RegionType, REGIONS}};
 use mongodb::bson::oid::ObjectId;
-use rand::{seq::SliceRandom, Rng};
+use rand::{seq::{SliceRandom, IteratorRandom}, Rng, thread_rng};
 use serde::{Deserialize, Serialize};
 
 use data::Stat;
@@ -11,8 +11,8 @@ const fn default_class() -> ClassType {
 const fn default_gold() -> i32 {
     10
 }
-const fn default_journey() -> f32 {
-    0.0
+fn default_journey() -> Journey {
+    Journey::default()
 }
 const fn default_strength() -> i32 {
     20
@@ -25,6 +25,69 @@ const fn default_xp() -> i32 {
 }
 const fn default_level() -> i32 {
     1
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Region {
+    pub region_type: RegionType,
+    pub name: String,
+    pub distance: f32
+}
+
+impl Default for Region {
+    fn default() -> Self {
+        Self::new_with_random_name(0.0, RegionType::default())
+    }
+}
+
+impl Region {
+    pub fn new(distance: f32, name: String, region_type: RegionType) -> Self {
+        Self {
+            distance,
+            name,
+            region_type
+        }
+    }
+
+    pub fn new_with_random_name(distance: f32, region_type: RegionType) -> Self {
+        let name = region_type.generate_specific_name();
+        Self::new(distance, name, region_type)
+    }
+
+    pub fn generate_random_from_journey(journey: Journey) -> Self {
+        let last_region = journey.region_history.last();
+        if !last_region.map_or(false, |r| r.region_type != RegionType::City) {
+            return Self::new_with_random_name(journey.total_traveled, RegionType::City);
+        }
+
+        let region_type = REGIONS.iter().copied()
+            .filter(|r| *r != journey.current_region.region_type)
+            .choose(&mut thread_rng())
+            .unwrap_or_default();
+
+        Self::new_with_random_name(journey.total_traveled, region_type)
+    }
+
+    pub const fn emoji(&self) -> &'static str { self.region_type.emoji() }
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Journey {
+    pub total_traveled: f32,
+    pub current_region: Region,
+    pub region_history: Vec<Region>
+}
+
+impl Journey {
+    pub fn new() -> Self {
+        Self {
+            total_traveled: 0.0,
+            current_region: Region::new_with_random_name(0.0, RegionType::default()),
+            region_history: Vec::new()
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,7 +106,7 @@ pub struct UserData {
     #[serde(default)]
     pub mana: Stat,
     #[serde(default = "default_journey")]
-    pub journey: f32,
+    pub journey: Journey,
     #[serde(default = "default_strength")]
     pub strength: i32,
     #[serde(default = "default_agi_intel")]
@@ -62,6 +125,7 @@ impl UserData {
             id: ObjectId::new(),
             user_id,
             class,
+            journey: Journey::new(),
             ..Default::default()
         }
     }
@@ -106,6 +170,15 @@ impl UserData {
         }
 
         Some(self.level)
+    }
+
+    pub fn travel_distance(&mut self, distance: f32)  {
+        self.journey.total_traveled += distance;
+    }
+
+    pub fn travel_to_region(&mut self, region: Region)  {
+        self.journey.region_history.push(self.journey.current_region.clone());
+        self.journey.current_region = region;
     }
 
     pub fn add_gold(&mut self, amount: i32) {

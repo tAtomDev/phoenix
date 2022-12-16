@@ -47,8 +47,13 @@ impl Command for ProfileCommand {
                 inline: true,
             })
             .add_field(EmbedField {
-                name: "🗺️ Rumo à Reconstrução".into(),
-                value: f!("`{} km` percorridos", user_data.journey),
+                name: "🗺️ Jornada".into(),
+                value: f!(
+                    "**{} {}**\n`{:.2} km` percorridos", 
+                    user_data.journey.current_region.emoji(),
+                    user_data.journey.current_region.name,
+                    user_data.journey.total_traveled
+                ),
                 inline: true,
             })
             .add_field(EmbedField {

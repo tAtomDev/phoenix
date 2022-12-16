@@ -1,8 +1,12 @@
 #![allow(unused)]
 
-use std::{time::Duration, future::Future};
+use std::{time::Duration, future::Future, ops::Range};
 
+use rand::{random, thread_rng, seq::SliceRandom, Rng};
 use tokio::{task::JoinHandle, time};
+
+mod pagination;
+pub use pagination::Pagination;
 
 pub mod math;
 
@@ -57,7 +61,7 @@ impl Color {
 
     pub fn to_u32(&self) -> u32 {
         match self {
-            Self::Hex(code) => u32::from_str_radix(code.replace('#', "").as_str(), 16).unwrap_or(0),
+            Self::Hex(code) => u32::from_str_radix(code.replace("#", "").as_str(), 16).unwrap_or(0),
             Self::Rgb(r, g, b) => (r << 16u32) + (g << 8u32) + b,
             Self::Integer(int) => *int,
         }
@@ -77,7 +81,7 @@ where
 }
 
 // https://users.rust-lang.org/t/setinterval-in-rust/41664
-fn set_tokio_interval<F, Fut>(mut f: F, duration: Duration)
+pub fn set_tokio_interval<F, Fut>(mut f: F, duration: Duration)
 where
     F: Send + 'static + FnMut() -> Fut,
     Fut: Future<Output = ()> + Send + 'static,

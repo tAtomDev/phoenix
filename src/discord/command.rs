@@ -206,7 +206,7 @@ impl CommandContext {
         };
 
         let standby = self.standby.clone();
-        let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(60), move |event| {
+        let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(60), move |event: &Interaction| {
             event.author_id() == Some(user.id)
         }).await else {
             return false;

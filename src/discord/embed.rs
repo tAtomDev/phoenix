@@ -159,6 +159,18 @@ impl EmbedBuilder {
         self.to_owned()
     }
 
+    pub fn add_footer_text<S: ToString>(&mut self, text: S) -> Self {
+        if let Some(footer) = &self.embed.footer {
+            let new_footer = EmbedFooter { text: format!("{} | {}", footer.text, text.to_string()), ..footer.clone() };
+            self.embed.footer = Some(new_footer);
+        } else {
+            return self.set_footer(EmbedFooter { text: text.to_string(), icon_url: None });
+        }
+
+        self.to_owned()
+    }
+
+
     pub fn add_field(&mut self, field: EmbedField) -> Self {
         self.embed.fields.push(field);
         self.to_owned()

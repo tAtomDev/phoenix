@@ -75,7 +75,7 @@ impl Command for StartCommand {
         let message = ctx.fetch_reply().await?;
 
         let standby = ctx.standby.clone();
-        let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(120), move |event| {
+        let Ok(Some(component)) = standby.wait_for_component_with_duration(message.id, Duration::from_secs(120), move |event: &Interaction| {
             event.author_id() == Some(author.id)
         }).await else {
             return Ok(());

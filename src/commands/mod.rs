@@ -67,6 +67,7 @@ pub mod prelude {
     pub type CommandResult = Result<(), DynamicError>;
 
     pub use twilight_model::{
+        application::interaction::Interaction,
         application::command::CommandOptionType,
         gateway::payload::incoming::InteractionCreate,
         http::interaction::{

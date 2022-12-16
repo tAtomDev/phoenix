@@ -1,5 +1,6 @@
 pub mod anomalies;
 pub mod classes;
+pub mod regions;
 mod common;
 mod emoji;
 
