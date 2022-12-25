@@ -221,7 +221,7 @@ pub fn get_anomaly_from_type(anomaly: AnomalyType) -> Option<Anomaly> {
 }
 
 pub fn factor(level: i32, factor: f32) -> i32 {
-    let level = level as f32 + 1.;
+    let level = level as f32;
     ((level * factor) as i32).max(1)
 }
 
