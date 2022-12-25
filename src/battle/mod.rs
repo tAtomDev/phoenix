@@ -18,42 +18,56 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Action {
+pub enum ActionType {
     Attack,
 }
 
-pub const ACTIONS: [Action; 1] = [Action::Attack];
+pub const ALL_ACTION_TYPES: [ActionType; 1] = [ActionType::Attack];
 
-impl Action {
-    fn from_name(name: &str) -> Option<Action> {
-        ACTIONS.iter().copied().find(|a| a.name() == name)
+impl ActionType {
+    fn from_name(name: &str) -> Option<ActionType> {
+        ALL_ACTION_TYPES.iter().copied().find(|a| a.name() == name)
     }
 
     fn emoji(&self) -> &'static str {
         match self {
-            Action::Attack => "👊",
+            ActionType::Attack => "👊",
         }
     }
 
     fn name(&self) -> &'static str {
         match self {
-            Action::Attack => "Atacar",
+            ActionType::Attack => "Atacar",
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum BattleEffect {
+    Damage(i32),
+    RemoveMana(i32),
+}
+
+#[derive(Debug, Clone)]
+pub struct BattleAction {
+    pub action_type: ActionType,
+    pub attacker: Fighter,
+    pub target: Option<Fighter>,
+    pub effects: Vec<BattleEffect>
 }
 
 #[derive(Debug, Clone)]
 pub struct Round {
     messages: Vec<String>,
     fighter: Fighter,
-    action: Action,
+    action: BattleAction,
 }
 
 impl Round {
-    fn new_with_message(fighter: Fighter, action: Action, message: impl Into<String>) -> Self {
+    fn new_with_message(fighter: Fighter, action: BattleAction, message: impl Into<String>) -> Self {
         Self {
             messages: vec![message.into()],
-            action,
+            action: action,
             fighter,
         }
     }
@@ -63,7 +77,7 @@ impl From<Round> for EmbedBuilder {
     fn from(round: Round) -> Self {
         Self::new()
             .set_author(EmbedAuthor {
-                name: f!("{} usou {}", round.fighter.name, round.action.name()),
+                name: f!("{} usou {}", round.fighter.name, round.action.action_type.name()),
                 icon_url: Some(round.fighter.image()),
             })
             .set_thumbnail(round.fighter.image())
@@ -141,7 +155,7 @@ impl Battle {
         self.fighters.get_mut(index).unwrap()
     }
 
-    pub fn run_action(&mut self, action: Action) -> Round {
+    pub fn run_action(&mut self, action_type: ActionType) -> Round {
         let fighter = self.current_fighter().clone();
         let target = self.target_fighter_mut();
 
@@ -152,12 +166,19 @@ impl Battle {
             .calculate_critical_chance(target)
             .generate_random_bool();
 
-        let round = match action {
-            Action::Attack => {
+        let round = match action_type {
+            ActionType::Attack => {
                 let damage = if dodged {
                     0
                 } else {
                     fighter.calculate_damage(critical)
+                };
+
+                let action = BattleAction {
+                    action_type: ActionType::Attack,
+                    attacker: fighter.clone(),
+                    target: Some(target.clone()),
+                    effects: vec![BattleEffect::Damage(damage)]
                 };
 
                 #[rustfmt::skip]

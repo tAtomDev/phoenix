@@ -20,7 +20,7 @@ use crate::{
 };
 use util::Color;
 
-use super::{Action, Battle, BattleResult, ACTIONS};
+use super::{ActionType, Battle, BattleResult, ALL_ACTION_TYPES};
 
 fn get_battle_embed(battle: &Battle) -> EmbedBuilder {
     let current_fighter = battle.current_fighter();
@@ -53,7 +53,7 @@ fn get_battle_embed(battle: &Battle) -> EmbedBuilder {
 fn get_battle_action_components(_battle: &Battle) -> Component {
     ActionRowBuilder::new()
         .add_buttons(
-            ACTIONS
+            ALL_ACTION_TYPES
                 .iter()
                 .copied()
                 .map(|a| {
@@ -72,11 +72,11 @@ fn get_battle_action_components(_battle: &Battle) -> Component {
 async fn wait_for_battle_action(
     ctx: &CommandContext,
     battle: Battle,
-) -> Result<Option<Action>, DynamicError> {
+) -> Result<Option<ActionType>, DynamicError> {
     let author_id = ctx.author_id()?;
 
     if let Some(anomaly) = battle.current_fighter().anomaly {
-        return Ok(Some(battle.current_fighter().choose_action(&battle)));
+        return Ok(Some(battle.current_fighter().choose_action_type(&battle)));
     }
 
     let message = ctx
@@ -100,7 +100,7 @@ async fn wait_for_battle_action(
         return Ok(None);
     };
 
-    let action = Action::from_name(&data.custom_id).ok_or("Invalid action")?;
+    let action = ActionType::from_name(&data.custom_id).ok_or("Invalid action")?;
 
     let interaction = Box::new(component);
     let ctx = CommandContext::from_with_interaction(ctx, interaction.clone());
@@ -196,7 +196,7 @@ async fn check_or_handle_battle(
                     "- **`#{}`**: {} usou {}",
                     (i + j),
                     round.fighter.name,
-                    round.action.name()
+                    round.action.action_type.name()
                 ),
                 value: round.messages.join("\n") + "\n",
                 inline: false,

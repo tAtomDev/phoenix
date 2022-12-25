@@ -3,7 +3,7 @@ use database::user_model::UserData;
 use rand::Rng;
 use twilight_model::user::User as DiscordUser;
 
-use super::{Action, Battle};
+use super::{ActionType, Battle};
 use crate::commands::prelude::{DynamicError, UserExtension};
 use util::math;
 
@@ -109,10 +109,10 @@ impl Fighter {
         )
     }
 
-    pub fn choose_action(&self, battle: &Battle) -> Action {
+    pub fn choose_action_type(&self, battle: &Battle) -> ActionType {
         let _fighter = battle.current_fighter();
         let _target = battle.target_fighter();
 
-        Action::Attack
+        ActionType::Attack
     }
 }
