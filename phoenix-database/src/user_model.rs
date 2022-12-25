@@ -151,7 +151,7 @@ impl UserData {
 
         let rng = &mut rand::thread_rng();
 
-        let mut attributes_points = 2;
+        let mut attributes_points = 5;
 
         let (lower_range, upper_range) = ((self.level / 3).max(1), (self.level / 2).max(2));
 
@@ -162,13 +162,20 @@ impl UserData {
         }
 
         while attributes_points > 0 {
-            let upgrades: Vec<Box<dyn Fn(&mut UserData, i32) -> ()>> = vec![
+            let common_upgrades: Vec<Box<dyn Fn(&mut UserData, i32) -> ()>> = vec![
                 Box::new(UserData::add_max_health),
                 Box::new(UserData::add_max_mana),
+            ];
+            let rare_upgrades: Vec<Box<dyn Fn(&mut UserData, i32) -> ()>> = vec![
                 Box::new(UserData::add_strength),
                 Box::new(UserData::add_intelligence),
                 Box::new(UserData::add_agility),
             ];
+
+            let upgrades: Vec<Box<dyn Fn(&mut UserData, i32) -> ()>> = match rng.gen_bool(0.7) {
+                true => common_upgrades,
+                _ => rare_upgrades
+            };
 
             let Some(upgrade) = upgrades.choose(rng) else {
                 break;

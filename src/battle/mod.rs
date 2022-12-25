@@ -1,6 +1,6 @@
 #![allow(unused)]
-mod fighter;
 pub mod controller;
+mod fighter;
 
 use std::f32::consts::E;
 
@@ -53,7 +53,7 @@ pub struct BattleAction {
     pub action_type: ActionType,
     pub attacker: Fighter,
     pub target: Option<Fighter>,
-    pub effects: Vec<BattleEffect>
+    pub effects: Vec<BattleEffect>,
 }
 
 #[derive(Debug, Clone)]
@@ -64,7 +64,11 @@ pub struct Round {
 }
 
 impl Round {
-    fn new_with_message(fighter: Fighter, action: BattleAction, message: impl Into<String>) -> Self {
+    fn new_with_message(
+        fighter: Fighter,
+        action: BattleAction,
+        message: impl Into<String>,
+    ) -> Self {
         Self {
             messages: vec![message.into()],
             action: action,
@@ -77,7 +81,11 @@ impl From<Round> for EmbedBuilder {
     fn from(round: Round) -> Self {
         Self::new()
             .set_author(EmbedAuthor {
-                name: f!("{} usou {}", round.fighter.name, round.action.action_type.name()),
+                name: f!(
+                    "{} usou {}",
+                    round.fighter.name,
+                    round.action.action_type.name()
+                ),
                 icon_url: Some(round.fighter.image()),
             })
             .set_thumbnail(round.fighter.image())
@@ -178,7 +186,7 @@ impl Battle {
                     action_type: ActionType::Attack,
                     attacker: fighter.clone(),
                     target: Some(target.clone()),
-                    effects: vec![BattleEffect::Damage(damage)]
+                    effects: vec![BattleEffect::Damage(damage)],
                 };
 
                 #[rustfmt::skip]

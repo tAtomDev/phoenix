@@ -220,9 +220,9 @@ pub fn get_anomaly_from_type(anomaly: AnomalyType) -> Option<Anomaly> {
     })
 }
 
-pub fn factor(rng: &mut ThreadRng, level: i32, extra_factor: f32) -> f32 {
-    let level = level + 1;
-    (level + (level / 2)) as f32 * 0.5 * rng.gen_range(0.3..1.25) * (extra_factor / 2.0)
+pub fn factor(level: i32, factor: f32) -> i32 {
+    let level = level as f32 + 1.;
+    ((level * factor) as i32).max(1)
 }
 
 pub fn calculate_potency(
@@ -245,12 +245,12 @@ pub fn generate_random_anomaly(player_level: i32, region_type: RegionType) -> An
     let random_index = rng.gen_range(0..valid_anomalies.len());
     let def = valid_anomalies[random_index];
 
-    let level = (player_level as f32 * rng.gen_range(0.6..1.3)).max(1.0) as i32;
-    let health = Stat::new((factor(rng, level, 1.3) * def.health.max as f32) as i32);
-    let mana = Stat::new((factor(rng, level, 1.2) * def.mana.max as f32) as i32);
-    let strength = (factor(rng, level, 1.3) * def.strength as f32) as i32;
-    let agility = (factor(rng, level, 1.25) * def.agility as f32) as i32;
-    let intelligence = (factor(rng, level, 1.0) * def.intelligence as f32) as i32;
+    let level = (player_level as f32 * rng.gen_range(0.8..1.3)).max(1.0) as i32;
+    let health = Stat::new((factor(level, 1.3) * def.health.max) as i32);
+    let mana = Stat::new((factor(level, 1.3) * def.mana.max) as i32);
+    let strength = (factor(level, 1.3) * def.strength) as i32;
+    let agility = (factor(level, 1.3) * def.agility) as i32;
+    let intelligence = (factor(level, 1.3) * def.intelligence) as i32;
 
     let potency = calculate_potency(
         rng,

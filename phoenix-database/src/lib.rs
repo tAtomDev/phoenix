@@ -89,6 +89,21 @@ impl Database {
         Ok(())
     }
 
+    pub async fn delete_all_cooldowns(
+        &self,
+    ) -> Result<(), Error> {
+        let cooldown_collection = self.cooldown_collection();
+
+        cooldown_collection
+            .delete_many(
+                doc! {},
+                None,
+            )
+            .await?;
+
+        Ok(())
+    }
+
     pub async fn get_user_cooldown(
         &self,
         user_id: &String,
