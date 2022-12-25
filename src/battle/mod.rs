@@ -1,6 +1,6 @@
 #![allow(unused)]
 mod fighter;
-pub mod util;
+pub mod controller;
 
 use std::f32::consts::E;
 

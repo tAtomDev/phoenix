@@ -89,7 +89,7 @@ impl Command for BattleCommand {
 
         let battle = &mut battle::Battle::new(fighters)?;
 
-        battle::util::handle_battle(&ctx, battle).await?;
+        battle::controller::handle_battle(&ctx, battle).await?;
 
         Ok(())
     }

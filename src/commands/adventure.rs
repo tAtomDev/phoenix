@@ -116,7 +116,7 @@ impl Command for AdventureCommand {
 
         let battle = &mut battle::Battle::new(fighters)?;
 
-        let battle_result = battle::util::handle_battle(&ctx, battle).await?;
+        let battle_result = battle::controller::handle_battle(&ctx, battle).await?;
 
         let winner = battle_result.winner;
         let author_fighter = battle_result
