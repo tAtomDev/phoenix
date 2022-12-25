@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use crate::battle::{self, Fighter};
 use data::{anomalies, regions::RegionType};
 use database::user_model::Region;
@@ -60,16 +58,26 @@ impl Command for AdventureCommand {
             ctx.db().save_user_data(author_data).await?;
 
             ctx.send_in_channel(
-                Response::new_user_reply(author, f!("você saiu da sua cidade e caminhou até chegar em **{}**!", new_region.name))
-                .set_emoji_prefix(new_region.emoji())
-            ).await?;
+                Response::new_user_reply(
+                    author,
+                    f!(
+                        "você saiu da sua cidade e caminhou até chegar em **{}**!",
+                        new_region.name
+                    ),
+                )
+                .set_emoji_prefix(new_region.emoji()),
+            )
+            .await?;
 
             return Ok(());
         }
 
         let author_fighter = Fighter::create_from_user_data(author.clone(), author_data.clone())?;
 
-        let anomaly = anomalies::generate_random_anomaly(author_data.level, author_data.journey.current_region.region_type);
+        let anomaly = anomalies::generate_random_anomaly(
+            author_data.level,
+            author_data.journey.current_region.region_type,
+        );
         let anomaly_fighter = Fighter::create_from_anomaly(anomaly)?;
 
         let embed = EmbedBuilder::new()
@@ -117,54 +125,44 @@ impl Command for AdventureCommand {
             .find(|f| f.user.as_ref().map_or(false, |u| u.id == author_id))
             .ok_or("Author fighter not found")?;
 
-        if let Some(user) = winner.user {
-            if user.id == author.id {
-                let distance = thread_rng().gen_range(0.2..0.4) as f32;
-                author_data.travel_distance(distance);
+        if winner.user.is_some() {
+            let distance = thread_rng().gen_range(0.2..0.4) as f32;
+            author_data.travel_distance(distance);
 
-                author_data.add_gold(anomaly.rewards.gold);
-                author_data.add_xp(anomaly.rewards.xp);
-                let new_level = author_data.level_up();
+            author_data.add_gold(anomaly.rewards.gold);
+            author_data.add_xp(anomaly.rewards.xp);
+            let new_level = author_data.level_up();
 
-                ctx.send_in_channel(Response::new_user_reply(
-                    author.clone(),
-                    f!("você recebeu:\n{}", anomaly.rewards),
-                ))
-                .await?;
+            let mut response =
+                Response::new_user_reply(author.clone(), f!("você recebeu:\n{}", anomaly.rewards))
+                    .set_emoji_prefix("💰");
 
-                if let Some(level) = new_level {
-                    let ctx = ctx.clone();
-                    let author = author.clone();
-
-                    #[rustfmt::skip]
-                    util::set_tokio_timeout(Duration::from_secs(1), async move {
-                        ctx.send_in_channel(
-                            Response::new_user_reply(author, f!("você agora está no nível **{}**", level))
-                        ).await.ok();
-                    });
-                }
-
-                if author_data.journey.region_history.len() == 0 || author_data.journey.total_traveled > (author_data.journey.current_region.distance + thread_rng().gen_range(0.8..1.2)) {
-                    let ctx = ctx.clone();
-                    let author = author.clone();
-                    let new_region = Region::generate_random_from_journey(author_data.journey.clone());
-
-                    author_data.travel_to_region(new_region.clone());
-
-                    let clone_region = new_region.clone();
-                    #[rustfmt::skip]
-                    util::set_tokio_timeout(Duration::from_secs(2), async move {
-                        ctx.send_in_channel(
-                            Response::new_user_reply(author, f!("você vagou e chegou em **{}**!", clone_region.name))
-                            .set_emoji_prefix(clone_region.emoji())
-                        ).await.ok();
-                    });
-                }
+            if let Some(level) = new_level {
+                response = response
+                    .add_string_content(f!("\n🌀 **|** Você agora está no nível **{}**", level));
             }
+
+            if author_data.journey.region_history.len() == 0
+                || author_data.journey.total_traveled
+                    > (author_data.journey.current_region.distance
+                        + thread_rng().gen_range(0.8..1.2))
+            {
+                let new_region = Region::generate_random_from_journey(author_data.journey.clone());
+
+                author_data.travel_to_region(new_region.clone());
+
+                response = response.add_string_content(f!(
+                    "\n🗺️ **|** Você vagou e chegou em **{}**!",
+                    new_region.name
+                ));
+            }
+
+            ctx.send_in_channel(response).await?;
         }
 
         author_data.set_health(author_fighter.health.value);
         author_data.set_mana(author_fighter.mana.value);
+        author_data.try_add_to_bestiary(anomaly.anomaly_type, winner.user.is_some());
 
         ctx.db().save_user_data(author_data).await?;
 

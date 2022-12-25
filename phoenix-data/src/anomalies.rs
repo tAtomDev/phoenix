@@ -1,10 +1,11 @@
 use std::fmt::Display;
 
 use rand::{rngs::ThreadRng, Rng};
+use serde::{Serialize, Deserialize};
 
 use crate::{Emoji, Stat, regions::RegionType};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AnomalyType {
     Treant,
     Orc,
@@ -198,6 +199,26 @@ pub const ANOMALIES: [AnomalyDefinition; 8] = [
     NIGHTFALL,
     TIMBERWRAITH,
 ];
+
+pub fn get_anomaly_from_type(anomaly: AnomalyType) -> Option<Anomaly> {
+    let anomaly = ANOMALIES.iter().copied().find(|a| a.anomaly_type == anomaly)?;
+
+    Some(Anomaly {
+        definition: anomaly,
+        anomaly_type: anomaly.anomaly_type,
+        variant: None,
+        health: anomaly.health,
+        mana: anomaly.mana,
+        strength: anomaly.strength,
+        agility: anomaly.agility,
+        intelligence: anomaly.intelligence,
+        level: 1,
+        rewards: AnomalyDrops {
+            xp: 0,
+            gold: 0,
+        },
+    })
+}
 
 pub fn factor(rng: &mut ThreadRng, level: i32, extra_factor: f32) -> f32 {
     let level = level + 1;

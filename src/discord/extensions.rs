@@ -1,4 +1,4 @@
-use std::{time::Duration, pin::Pin};
+use std::{pin::Pin, time::Duration};
 
 use async_trait::async_trait;
 use tokio_stream::{StreamExt, Timeout};
@@ -8,7 +8,7 @@ use twilight_model::{
     id::{marker::MessageMarker, Id},
     user::User,
 };
-use twilight_standby::{Standby, future::WaitForComponentStream};
+use twilight_standby::{future::WaitForComponentStream, Standby};
 
 use crate::commands::prelude::DynamicError;
 
@@ -38,27 +38,44 @@ trait_set! {
     pub trait ComponentFilter = Fn(&Interaction) -> bool + Send + Sync + 'static;
 }
 
-
 #[async_trait]
 pub trait StandbyExtension {
-    fn create_component_stream<T: ComponentFilter>(&self, message_id: Id<MessageMarker>, duration: Duration, filter: T) -> Pin<Box<Timeout<WaitForComponentStream>>>;
+    fn create_component_stream<T: ComponentFilter>(
+        &self,
+        message_id: Id<MessageMarker>,
+        duration: Duration,
+        filter: T,
+    ) -> Pin<Box<Timeout<WaitForComponentStream>>>;
 
-    async fn wait_for_component_with_duration<T: ComponentFilter>(&self, message_id: Id<MessageMarker>, duration: Duration, filter: T) 
-        -> Result<Option<Interaction>, DynamicError>;
+    async fn wait_for_component_with_duration<T: ComponentFilter>(
+        &self,
+        message_id: Id<MessageMarker>,
+        duration: Duration,
+        filter: T,
+    ) -> Result<Option<Interaction>, DynamicError>;
 }
 
 #[async_trait]
 impl StandbyExtension for Standby {
-    fn create_component_stream<T: ComponentFilter>(&self, message_id: Id<MessageMarker>, duration: Duration, filter: T) -> Pin<Box<Timeout<WaitForComponentStream>>> {
+    fn create_component_stream<T: ComponentFilter>(
+        &self,
+        message_id: Id<MessageMarker>,
+        duration: Duration,
+        filter: T,
+    ) -> Pin<Box<Timeout<WaitForComponentStream>>> {
         let stream = self
             .wait_for_component_stream(message_id, filter)
             .timeout(duration);
-    
+
         Box::pin(stream)
     }
 
-    async fn wait_for_component_with_duration<T: ComponentFilter>(&self, message_id: Id<MessageMarker>, duration: Duration, filter: T) 
-        -> Result<Option<Interaction>, DynamicError> {
+    async fn wait_for_component_with_duration<T: ComponentFilter>(
+        &self,
+        message_id: Id<MessageMarker>,
+        duration: Duration,
+        filter: T,
+    ) -> Result<Option<Interaction>, DynamicError> {
         let mut stream = self.create_component_stream(message_id, duration, filter);
 
         let Some(component) = stream.next().await else {

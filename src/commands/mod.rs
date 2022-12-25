@@ -6,6 +6,7 @@ use prelude::*;
 
 mod adventure;
 mod battle;
+mod bestiary;
 mod ping;
 mod profile;
 mod rest;
@@ -20,6 +21,7 @@ lazy_static! {
         map.insert("batalhar", Box::new(battle::BattleCommand));
         map.insert("aventura", Box::new(adventure::AdventureCommand));
         map.insert("descansar", Box::new(rest::RestCommand));
+        map.insert("bestiário", Box::new(bestiary::BestiaryCommand));
 
         map
     };
@@ -67,8 +69,8 @@ pub mod prelude {
     pub type CommandResult = Result<(), DynamicError>;
 
     pub use twilight_model::{
-        application::interaction::Interaction,
         application::command::CommandOptionType,
+        application::interaction::Interaction,
         gateway::payload::incoming::InteractionCreate,
         http::interaction::{
             InteractionResponse, InteractionResponseData, InteractionResponseType,

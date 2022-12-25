@@ -61,6 +61,17 @@ impl Response {
         }
     }
 
+    pub fn add_string_content(self, content: impl Into<String>) -> Response {
+        let content: String = content.into();
+        Response {
+            content: Some(
+                self.content
+                    .map_or(content.clone(), |c| format!("{}{}", c, content)),
+            ),
+            ..self
+        }
+    }
+
     pub fn set_emoji_prefix(self, emoji: impl Into<String>) -> Response {
         Response {
             content: self

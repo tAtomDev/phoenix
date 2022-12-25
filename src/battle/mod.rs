@@ -73,6 +73,7 @@ impl From<Round> for EmbedBuilder {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct BattleResult {
     pub winner: Fighter,
     pub defeated_fighters: Vec<Fighter>,

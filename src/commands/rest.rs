@@ -26,7 +26,7 @@ impl Command for RestCommand {
             .await?
             .ok_or("Invalid data")?;
 
-        if author_data.health.value as f32 > (author_data.health.max as f32 * 0.8) {
+        if author_data.health.value as f32 > (author_data.health.max as f32 * 0.95) {
             return ctx
                 .reply(
                     Response::new_user_reply(author, "você não precisa descansar!")
@@ -35,11 +35,10 @@ impl Command for RestCommand {
                 .await;
         }
 
-        if ctx
+        let cooldown_check = ctx
             .check_user_cooldown(author_id, CooldownType::Rest, Duration::minutes(20))
-            .await?
-            == CommandFlow::ShouldStop
-        {
+            .await?;
+        if cooldown_check == CommandFlow::ShouldStop {
             return Ok(());
         }
 

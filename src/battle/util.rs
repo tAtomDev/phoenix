@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use async_recursion::async_recursion;
 use twilight_model::{
-    application::interaction::{InteractionData, Interaction},
+    application::interaction::{Interaction, InteractionData},
     channel::message::{
         component::{ActionRow, Button, ButtonStyle},
         Component, ReactionType,
@@ -14,7 +14,8 @@ use crate::{
     discord::{
         component::{ActionRowBuilder, ButtonBuilder},
         embed::{EmbedAuthor, EmbedBuilder, EmbedField},
-        extensions::{StandbyExtension, UserExtension}, pagination::EmbedPagination,
+        extensions::{StandbyExtension, UserExtension},
+        pagination::EmbedPagination,
     },
 };
 use util::Color;
@@ -184,24 +185,31 @@ async fn check_or_handle_battle(
             .set_thumbnail(winner.image())
             .set_color(Color::LIGHT_ORANGE)
             .set_current_timestamp();
-        
+
         for j in 0..3 {
             let Some(round) = rounds.get(i + j) else {
                 break;
             };
 
             embed.add_field(EmbedField {
-                name: format!("- **`#{}`**: {} usou {}", (i + j), round.fighter.name, round.action.name()),
+                name: format!(
+                    "- **`#{}`**: {} usou {}",
+                    (i + j),
+                    round.fighter.name,
+                    round.action.name()
+                ),
                 value: round.messages.join("\n") + "\n",
-                inline: false
+                inline: false,
             });
         }
-        
+
         embeds.push(embed);
     }
-    
-    EmbedPagination::new(ctx.clone(), embeds)
-        .send().await?;
+
+    let ctx_clone = ctx.clone();
+    tokio::spawn(async move {
+        EmbedPagination::new(ctx_clone, embeds).send().await.ok();
+    });
 
     //ctx.send_in_channel(Response::from_embeds(vec![embed]))
     //    .await?;

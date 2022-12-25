@@ -1,4 +1,4 @@
-use data::{classes::ClassType, regions::{RegionType, REGIONS}};
+use data::{classes::ClassType, regions::{RegionType, REGIONS}, anomalies::AnomalyType};
 use mongodb::bson::oid::ObjectId;
 use rand::{seq::{SliceRandom, IteratorRandom}, Rng, thread_rng};
 use serde::{Deserialize, Serialize};
@@ -90,6 +90,13 @@ impl Journey {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BestiaryEntry {
+    pub anomaly: AnomalyType,
+    pub wins: i32,
+    pub loses: i32,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserData {
@@ -107,6 +114,8 @@ pub struct UserData {
     pub mana: Stat,
     #[serde(default = "default_journey")]
     pub journey: Journey,
+    #[serde(default)]
+    pub bestiary: Vec<BestiaryEntry>,
     #[serde(default = "default_strength")]
     pub strength: i32,
     #[serde(default = "default_agi_intel")]
@@ -181,6 +190,25 @@ impl UserData {
         self.journey.current_region = region;
     }
 
+    pub fn try_add_to_bestiary(&mut self, anomaly: AnomalyType, won: bool) {
+        let entry = self.bestiary.iter_mut().find(|e| e.anomaly == anomaly);
+
+        if let Some(entry) = entry {
+            if won {
+                entry.wins += 1;
+            } else {
+                entry.loses += 1;
+            }
+            return;
+        }
+
+        self.bestiary.push(BestiaryEntry { 
+            anomaly: anomaly, 
+            wins: if won { 1 } else { 0 }, 
+            loses: if won { 0 } else { 1 }
+        });
+    }
+
     pub fn add_gold(&mut self, amount: i32) {
         self.gold += amount
     }
@@ -252,6 +280,7 @@ impl Default for UserData {
             health: Stat::new(100),
             mana: Stat::new(20),
             journey: default_journey(),
+            bestiary: Vec::new(),
             strength: default_strength(),
             agility: default_agi_intel(),
             intelligence: default_agi_intel(),
