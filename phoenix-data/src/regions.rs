@@ -16,12 +16,14 @@ pub const REGIONS: [RegionType; 4] = [
     RegionType::City, RegionType::Swamp, RegionType::Grassland, RegionType::Forest
 ];
 
-const COMMON_NAMES: [&'static str; 15] = [
+const COMMON_NAMES: [&'static str; 30] = [
     "Negr$", "Verde", "Bel$", "Encantad$", "Sombri$", "Mágic$", "Seren$", "Sagrad$", "Milenar", "Superior", "Lendári$",
-    "Fúnebre", "Espetacular", "Fabulos$", "Cristalin$"
+    "Fúnebre", "Espetacular", "Fabulos$", "Cristalin$", "Ardente", "Brilhante", "Celeste", "Divin$", "Etern$", 
+    "Fenomenal", "Glorioso", "Harmônic$", "Infinit$", "Luminos$", "Majestos$", "Nobre", "Próspero", "Real",
+    "Abandonad$"
 ];
 
-const ADJECTIVES: [&'static str; 6] = ["Incrível", "dos Sonhos Perdidos", "Inesperad$", "Espectral", "Encantad$", "Místic$"];
+const ADJECTIVES: [&'static str; 7] = ["Incrível", "dos Sonhos Perdidos", "Inesperad$", "Espectral", "Encantad$", "Místic$", "Fantástic$"];
 
 const LOCATIONS: [&'static str; 9] = ["do Norte", "do Sul", "do Leste", "do Oeste", "do Noroeste", "do Nordeste", "do Sudeste", "do Sudoeste", "Central"];
 

@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::battle::{self, Fighter};
 use data::{anomalies, regions::RegionType};
 use database::user_model::Region;
@@ -157,7 +159,10 @@ impl Command for AdventureCommand {
                 ));
             }
 
-            ctx.send_in_channel(response).await?;
+            let ctx = ctx.clone();
+            set_tokio_timeout(Duration::from_secs(2), async move {
+                ctx.send_in_channel(response).await.ok();
+            });
         }
 
         author_data.set_health(author_fighter.health.value);
