@@ -8,10 +8,14 @@ use crate::{Emoji, Stat, regions::RegionType};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AnomalyType {
     Treant,
-    Orc,
+    Wolf,
+    Blob,
     Vexbug,
+    Skeleton,
     Guardian,
+    Orc,
     Ferak,
+    SwampFerak,
     Oozeling,
     Nightfall,
     Timberwraith,
@@ -21,11 +25,15 @@ impl AnomalyType {
     const fn name(&self) -> &'static str {
         match self {
             AnomalyType::Treant => "Treant",
-            AnomalyType::Orc => "Orc",
+            AnomalyType::Wolf => "Lobo",
+            AnomalyType::Blob => "Blob",
+            AnomalyType::Skeleton => "Esqueleto",
             AnomalyType::Vexbug => "Vexbug",
-            AnomalyType::Timberwraith => "Timberwraith",
             AnomalyType::Guardian => "Guardião",
+            AnomalyType::Orc => "Orc",
+            AnomalyType::Timberwraith => "Timberwraith",
             AnomalyType::Ferak => "Ferak",
+            AnomalyType::SwampFerak => "Ferak do Pântano",
             AnomalyType::Oozeling => "Oozeling",
             AnomalyType::Nightfall => "Nightfall",
         }
@@ -34,10 +42,14 @@ impl AnomalyType {
     const fn image(&self) -> &'static str {
         match self {
             AnomalyType::Treant => "https://i.imgur.com/QuWuU0j.png",
+            AnomalyType::Wolf => "https://i.imgur.com/PXxtPMt.png",
+            AnomalyType::Blob => "https://i.imgur.com/xQcIOSJ.png",
+            AnomalyType::Skeleton => "https://i.imgur.com/T6LRyma.png",
             AnomalyType::Orc => "https://i.imgur.com/wIfjahq.png",
             AnomalyType::Vexbug => "https://i.imgur.com/PWpbL8r.png",
             AnomalyType::Guardian => "https://i.imgur.com/wWkkOJX.png",
             AnomalyType::Ferak => "https://i.imgur.com/sNnkwxi.png",
+            AnomalyType::SwampFerak => "https://i.imgur.com/aJsLltd.png",
             AnomalyType::Oozeling => "https://i.imgur.com/hro2X3W.png",
             AnomalyType::Nightfall => "https://i.imgur.com/ddX6CCu.png",
             AnomalyType::Timberwraith => "https://i.imgur.com/w6xnlJf.png",
@@ -119,6 +131,36 @@ pub const TREANT: AnomalyDefinition = AnomalyDefinition {
     valid_regions: &[RegionType::Grassland]
 };
 
+pub const WOLF: AnomalyDefinition = AnomalyDefinition {
+    anomaly_type: AnomalyType::Wolf,
+    health: Stat::new(30),
+    mana: Stat::new(1),
+    strength: 5,
+    agility: 3,
+    intelligence: 3,
+    valid_regions: &[RegionType::Forest]
+};
+
+pub const BLOB: AnomalyDefinition = AnomalyDefinition {
+    anomaly_type: AnomalyType::Blob,
+    health: Stat::new(20),
+    mana: Stat::new(10),
+    strength: 8,
+    agility: 2,
+    intelligence: 5,
+    valid_regions: &[RegionType::Swamp]
+};
+
+pub const SKELETON: AnomalyDefinition = AnomalyDefinition {
+    anomaly_type: AnomalyType::Skeleton,
+    health: Stat::new(50),
+    mana: Stat::new(10),
+    strength: 10,
+    agility: 10,
+    intelligence: 5,
+    valid_regions: &[RegionType::Forest, RegionType::Swamp]
+};
+
 pub const ORC: AnomalyDefinition = AnomalyDefinition {
     anomaly_type: AnomalyType::Orc,
     health: Stat::new(100),
@@ -159,6 +201,16 @@ pub const FERAK: AnomalyDefinition = AnomalyDefinition {
     valid_regions: &[RegionType::Swamp, RegionType::Forest]
 };
 
+pub const SWAMP_FERAK: AnomalyDefinition = AnomalyDefinition {
+    anomaly_type: AnomalyType::SwampFerak,
+    health: Stat::new(45),
+    mana: Stat::new(20),
+    strength: 20,
+    agility: 5,
+    intelligence: 3,
+    valid_regions: &[RegionType::Swamp]
+};
+
 pub const OOZELING: AnomalyDefinition = AnomalyDefinition {
     anomaly_type: AnomalyType::Oozeling,
     health: Stat::new(60),
@@ -176,7 +228,7 @@ pub const NIGHTFALL: AnomalyDefinition = AnomalyDefinition {
     strength: 30,
     agility: 10,
     intelligence: 10,
-    valid_regions: &[RegionType::Grassland]
+    valid_regions: &[RegionType::Forest]
 };
 
 pub const TIMBERWRAITH: AnomalyDefinition = AnomalyDefinition {
@@ -186,15 +238,19 @@ pub const TIMBERWRAITH: AnomalyDefinition = AnomalyDefinition {
     strength: 20,
     agility: 15,
     intelligence: 10,
-    valid_regions: &[RegionType::Forest]
+    valid_regions: &[RegionType::Grassland]
 };
 
-pub const ANOMALIES: [AnomalyDefinition; 8] = [
+pub const ANOMALIES: [AnomalyDefinition; 12] = [
     TREANT,
-    ORC,
+    WOLF,
+    BLOB,
+    SKELETON,
     VEXBUG,
     GUARDIAN,
+    ORC,
     FERAK,
+    SWAMP_FERAK,
     OOZELING,
     NIGHTFALL,
     TIMBERWRAITH,

@@ -7,9 +7,9 @@ use crate::{Probability, common};
 pub enum RegionType {
     #[default]
     Forest,
+    City,
     Swamp,
     Grassland,
-    City,
 }
 
 pub const REGIONS: [RegionType; 4] = [
@@ -28,19 +28,19 @@ const LOCATIONS: [&'static str; 9] = ["do Norte", "do Sul", "do Leste", "do Oest
 impl RegionType {
     pub const fn emoji(&self) -> &'static str {
         match self {
+            RegionType::City => "🏙️",
             RegionType::Forest => "🌲",
             RegionType::Swamp => "🍀",
             RegionType::Grassland => "🏞️",
-            RegionType::City => "🏙️",
         }
     }
 
     pub const fn name(&self) -> &'static str {
         match self {
+            RegionType::City => "Cidade",
             RegionType::Forest => "Floresta",
             RegionType::Swamp => "Pântano",
             RegionType::Grassland => "Planície",
-            RegionType::City => "Cidade",
         }
     }
 
