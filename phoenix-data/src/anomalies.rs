@@ -235,7 +235,7 @@ pub fn calculate_potency(
 ) -> f32 {
     (health * 1.1 + mana * 1.1 + (strength + strength / 1.5f32))
         + (agility + intelligence + rng.gen_range(2f32..7f32)) 
-        / rng.gen_range(6.85..7.0)
+        / rng.gen_range(10.0..12.0)
 }
 
 pub fn generate_random_anomaly(player_level: i32, region_type: RegionType) -> Anomaly {
@@ -260,10 +260,11 @@ pub fn generate_random_anomaly(player_level: i32, region_type: RegionType) -> An
         agility as f32,
         intelligence as f32,
     );
-    let value = ((potency * rng.gen_range(0.9..1.1)) as i32).max(1);
+    let value = ((potency * rng.gen_range(0.08..0.1)) as i32).max(1);
 
-    let xp_reward = rng.gen_range(5..7) * level * (value / 5);
-    let gold_reward = rng.gen_range(2..3) * level * (value / 9);
+    let reward_multiplier = (level as f32 / 5.0) + value as f32;
+    let xp_reward = rng.gen_range(5..7) * reward_multiplier as i32;
+    let gold_reward = rng.gen_range(2..3) * (reward_multiplier * 0.8) as i32;
 
     Anomaly {
         definition: *def,
