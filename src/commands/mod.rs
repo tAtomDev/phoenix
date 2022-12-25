@@ -7,6 +7,7 @@ use prelude::*;
 mod adventure;
 mod battle;
 mod bestiary;
+mod owner;
 mod ping;
 mod profile;
 mod rest;
@@ -22,6 +23,7 @@ lazy_static! {
         map.insert("aventura", Box::new(adventure::AdventureCommand));
         map.insert("descansar", Box::new(rest::RestCommand));
         map.insert("bestiário", Box::new(bestiary::BestiaryCommand));
+        map.insert("owner", Box::new(owner::OwnerCommand));
 
         map
     };
